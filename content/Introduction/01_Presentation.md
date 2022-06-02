@@ -1,0 +1,77 @@
+---
+title: "1. Presentation"
+---
+
+_Jacques Serizay_  
+_Orr Ashenberg_  
+_Arnav Mehta_
+
+## Dates
+06-10 June 2022
+
+## Where
+
+This course will be held online.
+
+## Overview
+
+This course will introduce biologists and bioinformaticians to the field of single-cell RNA sequencing. 
+We will cover a range of software and analysis workflows that extend 
+over the spectrum from the best practices in the filtering scRNA-seq data  
+to the downstream analysis of cell clusters and temporal ordering. 
+This course will help the attendees gain accurate insights in pre-processing, 
+analysis and interpretation of scRNA-seq data.
+
+We will start by introducing general concepts about single-cell RNA-sequencing. From there, we will then continue to describe the main analysis steps to go from raw sequencing data to processed and usable data. We will present classical analysis workflows, their output and the possible paths to investigate downstream of this.  
+
+Throughout the workshop, `bash` tools and `R/Bioconductor` packages will be used to analyse datasets and learn new approaches. 
+
+## Format
+
+The course is structured in modules over five days. 
+Each day will include formal lectures covering the key concepts required to understand scRNA-seq analysis. 
+The remainder of each day will consist in practical hands-on sessions focusing on analysis of scRNA-seq data. 
+These sessions will involve a combination of both mirroring exercises with 
+the instructor to demonstrate a skill, as well as applying these skills on 
+your own to complete individual exercises.  
+During and after each exercise, interpretation of results will be discussed 
+as a group.
+
+## Targeted audience and required background
+
+The course will be mostly beneficial to those who have, or will shortly have, scRNA-seq data ready to analyse.  
+
+The material is suitable both for experimentalists who want to learn 
+more about data-analysis as well as computational biologists 
+who want to learn about scRNA-seq methods.  
+
+Examples demonstrated in this course can be applied to any experimental protocol or biological system.
+
+The requirements for this course are: 
+
+1. Working knowledge of Unix / command line interface (managing files, running programs, reading manuals!). Basic bash commands (`cd`, `ls`, `...`) and CLI usage will _not_ be covered in this course. We advice attendees to not register if they lack fundamental experience in CLI.
+2. Programming experience in `R` (writing a function, basic I/O operations, variable types, using packages). `Bioconductor` experience is a plus. 
+3. Familiarity with next-generation sequencing data and its analyses (using alignment and quantification tools for bulk sequencing data)
+
+## Learning outcomes
+
+At the end of this course, you should be able to:
+
+- Understand the pros/cons of different single-cell RNA-seq methods
+- Process and QC of scRNA-seq data
+- Normalize scRNA-seq data
+- Correct for batch effects
+- Visualise the data and applying dimensionality reduction
+- Perform cell clustering and annotation 
+- Perform differential gene expression analysis
+- Infer cell trajectory and pseudotime, and perform temporal differential expression 
+
+Throughout the course, we will also have a focus on reproducible research, documented content and interactive reports.
+
+--- 
+
+## Instructors
+
+Jacques Serizay  
+Orr Ashenberg  
+Arnav Mehta

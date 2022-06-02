@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title> Single-cell RNA-seq analysis with R/Bioconductor on Single-cell RNA-seq analysis with R/Bioconductor</title>
+    <link>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/</link>
+    <description>Recent content in  Single-cell RNA-seq analysis with R/Bioconductor on Single-cell RNA-seq analysis with R/Bioconductor</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language><atom:link href="https://js2264.github.io/scRNAseq_Physalia_2022/introduction/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>1. Presentation</title>
+      <link>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/01_presentation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/01_presentation/</guid>
+      <description>Jacques Serizay
+Orr Ashenberg Arnav Mehta
+Dates 06-10 June 2022
+Where This course will be held online.
+Overview This course will introduce biologists and bioinformaticians to the field of single-cell RNA sequencing. We will cover a range of software and analysis workflows that extend over the spectrum from the best practices in the filtering scRNA-seq data
+to the downstream analysis of cell clusters and temporal ordering. This course will help the attendees gain accurate insights in pre-processing, analysis and interpretation of scRNA-seq data.</description>
+    </item>
+    
+    <item>
+      <title>2. Program</title>
+      <link>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/02_program/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/02_program/</guid>
+      <description>Classes are from:
+ 2 to 8 pm Paris time. 1 to 7 pm London time. 8 am to 2 pm NY time. 5 am to 11 am SF time.  Monday – Classes from 14:00 to 20:00 (Paris time) Lecture 1 – Introduction to scRNA-Seq analysis [Orr]  General introduction: cell atlas overviews Comparison of bulk and single cell RNA-Seq Overview of available scRNA-seq technologies (10x) and experimental protocols  Lab 1 – Familiarizing yourself with the course AWS instance [Jacques]  Using RStudio Logging in AWS Shell and Unix commands to navigate directories, create folders, open files Raw file formats Get data from 10x website, single cell portal, from GEO (fastqs, counts)  Lecture 2 - From sequencing reads to expression matrices [Jacques]  scRNA-Seq processing workflow starting with choice of sequencer (NextSeq, HiSeq, MiSeq) / barcode swapping and bcl files Overview of Popular tools and algorithms Common single-cell analyses and interpretation Sequencing data: alignment and quality control IGV: Looking at cool things in alignment like where reads are, mutations, splicing  Lab 2 – From sequencing reads to expression matrices [Arnav]  Mapping sequencing data with Cellranger Quality Control reports (CellRanger, dropEst, fastqc)  Flash talks [Everybody] Tuesday – Classes from 14:00 to 20:00 (Paris time) Lab 3 - Introduction to R/Bioconductor [Jacques]  Installing packages with CRAN and Bioconductor Data types, data manipulation, slicing I/O for scRNAseq analysis in R  Lecture 3 - Quality control for scRNA-Seq data [Arnav]  What CellRanger does for quality filtering Normalisation methods https://www.</description>
+    </item>
+    
+    <item>
+      <title>3. Contacts</title>
+      <link>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/03_contacts/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/03_contacts/</guid>
+      <description>Contacts Jacques Serizay Orr Ashenberg Arnav Mehta </description>
+    </item>
+    
+    <item>
+      <title>4. Rstudio</title>
+      <link>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/04_rstudio/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/04_rstudio/</guid>
+      <description>Rstudio offers a graphical interface to facilitate the interaction between a user and an underlying programming language (this is sometimes called IDE, or integrated development environment). It can be very useful when a user is not necessarily proficent with command line-based computing. However, such graphical interfaces are not always able to connect to services such as AWS.
+Since most of the preliminary analysis we do is on AWS, we&amp;rsquo;d like to be able to use Rtudio directly from there.</description>
+    </item>
+    
+    <item>
+      <title>5. Prerequisites and required config</title>
+      <link>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/05_prerequisites/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://js2264.github.io/scRNAseq_Physalia_2022/introduction/05_prerequisites/</guid>
+      <description>Prerequisites The course is intended for those who have basic familiarity with Unix and the R scripting language.
+We will also assume that you are familiar with mapping and analysing bulk RNA-seq data as well as with the commonly available computational tools.
+ If a refresher is needed for Unix command line (hopefully not), please go over this tutorial and its companion cheatsheet . Getting down to basics: an introduction to the fundamentals of R (courtesy of Mark Ravinet ).</description>
+    </item>
+    
+  </channel>
+</rss>
