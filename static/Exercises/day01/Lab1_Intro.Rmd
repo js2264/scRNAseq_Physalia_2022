@@ -9,7 +9,7 @@ output:
         css: ../../../custom.css
 ---
 
-## 1. RStudio
+## 1. Connect to RStudio Server
 
 Most of single-cell RNA-seq analysis takes place either in `python` or in `R`. Here, we focus on how to leverage `R` to investigate scRNAseq data. 
 `RStudio` is an `IDE` (Integrated Development Environment, in other words: a nice graphical interface to run `R`-related commands). 
@@ -36,13 +36,14 @@ Do you know the most common ones? The semantics are a different from the `termin
 <details><summary style="color: #ff7f00; font-weight: bold">Show code</summary><p>
 ```{r eval = FALSE}
 getwd() # equivalent of `pwd` in terminal
+dir.create('~/data/') # equivalent of `mkdir ~/data/` in terminal
 setwd("~/data/") # equivalent of `cd ~/data/` in terminal
 list.files("~/data/") # equivalent of `ls` in terminal
 download.file("...") # equivalent of `wget ...` in terminal
 ```
 </p></details><br>
 
-## 2. Connect directly to AWS
+## 2. Use a AWS terminal within RStudio
 
 A general issue with bioinformatic analyses stems from the fact that nobody works in the same environment: 
 
@@ -51,8 +52,7 @@ A general issue with bioinformatic analyses stems from the fact that nobody work
 - Are you connected to the Internet? With a fast connection? Are you working behind a proxy? 
 
 To ensure that we are all working in the same environment, we rely on AWS (Amazon Web Services) EC2 (Elastic Cloud 2) instances. 
-EC2 instances are "virtual" computers to which you can connect remotely, from a local computer. Each one of you has been assigned a `user` ID (e.g. `user1`), 
-along with a security "`key`" (e.g. `user1.pem`). Using these credentials, you can directly log in to the AWS instance dedicated for this course. 
+EC2 instances are "virtual" computers to which you can connect remotely, from a local computer.   
 
 The instance is common for everybody. We are thus all sharing the same "computer"; this means: 
 
@@ -72,33 +72,7 @@ This should open up a new tab in the bottom left corner (next to the `R` console
 From here onwards, be sure you completely understand the difference between "`R` console" and "`terminal`". 
 They are entirely different things, and can be both accessed within `RStudio`. It is crucial you understand the difference between the two to not get confused for the rest of the course. 
 
-> Directly connect to AWS with a pre-installed SSH client (`ssh ...` command line in Mac and Linux)? 
-
-You will need your credentials (`user` ID), and you will also need to download the accompanying security `pem` file in your `Downloads` folder. 
-Then, in your terminal, you can use the following snippet: 
-
-<details><summary style="color: #ff7f00; font-weight: bold">Show code</summary><p>
-```{sh eval = FALSE}
-## Example
-cd ~/Downloads/
-chmod 600 "${USER}".pem
-ssh -i "${USER}".pem "${USER}"@"${IP}"
-
-## Actual Command Example
-cd ~/Downloads/
-chmod 600 user45.pem
-ssh -i user45.pem user45@34.213.180.241
-```
-</p></details><br>
-
-> Directly connect to AWS without pre-installed SSH client (generally for Windows users)? 
-
-Things are a little bit more tedious for Windows users, but luckily not impossible!
-There is a nice breakdown from another Physalia course on instructions for different operating systems and accessing AWS.
-It is called [Connection to the Amazon EC2 service](https://gitlab.com/bfosso/metabarcoding_physalia/-/blob/master/unix_short_tutorial/how_to_connect.md). 
-This will help with connecting to the AWS instance to run analyses.
-
-## 3. Basic commands in AWS
+## 3. Basic terminal commands
 
 The same `bash` commands are available in AWS `terminal`, regardless of whether you access the terminal from `RStudio` or through `ssh`. 
 
@@ -140,7 +114,7 @@ cd data
 mv ../history.txt ./
 ```
 
-- check manual page of `wget` command
+- check manual page of `wget` command (hit `q` to exit)
 
 ```{sh eval = FALSE}
 man wget
@@ -169,7 +143,6 @@ wget https://cf.10xgenomics.com/supp/cell-exp/cellranger-tiny-bcl-1.2.0.tar.gz
 
 ```{sh eval = FALSE}
 ls -l ~/Share/
-ls --color -Flh ~/Share/
 ```
 
 > Two important steps 
@@ -177,7 +150,7 @@ ls --color -Flh ~/Share/
 - Activate `conda` environment which unlocks the use of specific softwares such as `ffq`: 
 
 ```{sh eval = FALSE}
-conda activate scRNAseq2021
+conda activate scRNAseq2022
 ```
 
 - Download the `git` repository for this course from `GitHub`: 
@@ -200,35 +173,44 @@ Ok, **"your"** data is (most likely) yet to be sequenced! Or maybe you're intere
 I mean, who isn't interested in [this mind-blowing achievement from 10X Genomics](https://www.10xgenomics.com/blog/our-13-million-single-cell-dataset-is-ready-to-download)??
 
 [Human Cell Atlas](https://data.humancellatlas.org/explore/projects) is probably a good place to start digging, if you are interested in mammal-related studies. 
-For instance, let's say I want to check 
+For instance, let's say I am interested in epididymis differentiation. Boom: here is an entry from the HCA focusing on epididymis: 
+[link to HCA data portal](https://data.humancellatlas.org/explore/projects/842605c7-375a-47c5-9e2c-a71c2c00fcad).
 
-> Download reads from `Leir ... Harris, Life Sci Alliance 2020` study (DOI: 10.26508/lsa.202000744)
+### Raw fastq reads from GEO 
 
-Here is the study:  
-[An atlas of human proximal epididymis reveals cell-specific functions and distinct roles for CFTR](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7471510/)
+Here is the link to the actual paper studying epididymis:  
+[An atlas of human proximal epididymis reveals cell-specific functions and distinct roles for CFTR](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7471510/).
 
-Can you find the raw data from this paper? Tip: try the [brand new `ffq` tool](https://github.com/pachterlab/ffq)!
+> Find and check out the corresponding `GEO` entries for this study. What type of sequencing data is available? 
+
+Here is the link to the `GEO` page: [link](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE148963). 
+
+> Can you find links to download the raw data from this paper? 
+
+There are several ways to find this information, e.g. `ffq` command line tool, 
+or using the web-based `sra-explorer` page ([here](https://sra-explorer.info/)). 
+You generally will need the `GEO` corresponding ID or SRA project ID (e.g. `SRPxxxxxx`...).
+
+> Try to install and use the [brand new `ffq` tool](https://github.com/pachterlab/ffq) from the Patcher lab.
 
 ```{sh eval = FALSE}
 ffq --help
+ffq -t GSE GSE148963
 ```
 
+> Can you find the links to raw data associated with the `GSE148963` GEO ID? 
+
+You can use a `grep` command: `grep` returns the lines which match a given pattern (e.g. a link...)!
+
 ```{sh eval = FALSE}
-ffq -t GSE GSE148963 > GSE148963_ffq.json
-cat GSE148963_ffq.json
+ffq -t GSE GSE148963 | grep 'ftp://' 
 ```
 
-Can you find the links to raw data? You should use a `grep` command: `grep` returns the lines which match a given pattern (e.g. a link...)!
+And with a bit of `sed` magick... 
 
 ```{sh eval = FALSE}
-grep 'ftp://' GSE148963_ffq.json
-```
-
-And with a bit of magick... 
-
-```{sh eval = FALSE}
-grep 'ftp://' GSE148963_ffq.json | sed 's,.*ftp:,ftp:,' | sed 's,".*,,' > GSE148963_fastqlist.txt
-#wget -i GSE148963_fastqlist.txt ## Do not run, it would take too long...
+ffq -t GSE GSE148963 | grep 'ftp://' | sed 's,.*ftp:,ftp:,' | sed 's,".*,,' > GSE148963_fastqlist.txt
+# wget -i GSE148963_fastqlist.txt ## Do not run, it would take too long...
 ```
 
 > Check the content of the reads
@@ -249,32 +231,25 @@ seqkit stats --help
 seqkit stat ~/Share/SRR11575369_1.fastq.gz
 ```
 
-> Download processed count matrices directly from the HCA portal
+### Processed count matrices
 
-You will learn in the next practical how to process raw data, from reads to count matrices. 
-However, many times, researchers provide a filtered count matrix when they publish scRNAseq experiments. It's way lighter than `fastq` reads, 
-and you can go ahead with downstream analyses a lot quicker. But how do you get these matrices? 
+Many times, researchers will provide a filtered count matrix when they publish scRNAseq experiments (along with mandatory raw `fastq` data, of course). 
+It's way lighter than `fastq` reads, and you can go ahead with downstream analyses a lot quicker. So how do you get these matrices? 
 
 - Human Cell Atlas Consortium provides many processed datasets. For instance, in our case, the `Leir et al` study is available at the following link: [https://data.humancellatlas.org/explore/projects/842605c7-375a-47c5-9e2c-a71c2c00fcad]. 
-- GEO also sometimes hosts processed files
+- GEO also hosts processed files. 
 
-In this case, we have downloaded some of the processed files available in GEO, from [the following webpage](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE148963).
+> Find GEO-hosted processed files for the `Leir et al` study. 
 
-Check the content of the count matrix and the additional files. Can you understand what they contain? How are they structured? 
+You can download some of the processed files available in GEO from [the following webpage](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE148963).
+Scrolling down to the bottom of the page, there is a box labelled "Supplementary data". By clicking on "(custom)", a list of extra 
+supplementary files will appear. 
 
-```{sh eval = FALSE}
-wc -l ~/Share/GSM4486714_AXH009*
-head ~/Share/GSM4486714_AXH009*
-```
-
-- How many cells were sequenced? How many genes were counted? 
-- Is it easy to interpret the count matrix? Why is it in such format? 
-- Comment on the file sizes between processed count matrix files and raw reads. 
-
-```{sh eval = FALSE}
-ls -l ~/Share/GSM4486714_AXH009*
-ls -l ~/Share/SRR11575369_1.fastq.gz
-```
+> Download and check the content of the count matrix, the genes and the barcodes files.  
+> What type of information does each file contain? How is it formatted? is it easily imported in R?  
+> How many cells were sequenced? How many genes were counted?  
+> Is it easy to interpret the count matrix? Why is it in such format?  
+> Comment on the file sizes between processed count matrix files and raw reads.  
 
 ## 5. Bonus 
 

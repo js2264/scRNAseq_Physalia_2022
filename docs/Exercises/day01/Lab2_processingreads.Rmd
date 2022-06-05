@@ -27,7 +27,7 @@ Next, explore the contents of the sequencing directory:
 
 Now we can demultiplex our bcl files by running the following command in the terminal:
 
-`cellranger mkfastq --id=tiny-bcl --run=Share/data_wrangling/cellranger-tiny-bcl-1.2.0 --csv=Share/data_wrangling/cellranger-tiny-bcl-simple-1.2.0.csv`
+`cellranger mkfastq --id tiny-bcl --run Share/data_wrangling/cellranger-tiny-bcl-1.2.0 --csv Share/data_wrangling/cellranger-tiny-bcl-simple-1.2.0.csv`
 
 The output folders can be viewed by running the `ls` command:
 
@@ -43,7 +43,7 @@ Go to the [cellranger count algorithm overiew](https://support.10xgenomics.com/s
 
 In the terminal run the command:
 
-`cellranger count --id=counts --transcriptome=/opt/refdata-gex-mm10-2020-A --fastqs=tiny-bcl/outs/fastq_path/H35KCBCXY/test_sample2 --sample=test_sample2`
+`cellranger count --id counts --transcriptome ~/Share/refdata-gex-mm10-2020-A --fastqs tiny-bcl/outs/fastq_path/H35KCBCXY/test_sample2 --sample test_sample2`
 
 While the count command is running, read about the [format of the feature-barcode matrices](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices).
 

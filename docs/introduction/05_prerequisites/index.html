@@ -12,21 +12,21 @@
     <title>5. Prerequisites and required config :: Single-cell RNA-seq analysis with R/Bioconductor</title>
 
     
-    <link href="/scRNAseq_Physalia_2022/css/nucleus.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/fontawesome-all.min.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/hybrid.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/featherlight.min.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/perfect-scrollbar.min.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/auto-complete.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/atom-one-dark-reasonable.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/theme.css?1654202492" rel="stylesheet">
-    <link href="/scRNAseq_Physalia_2022/css/hugo-theme.css?1654202492" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/nucleus.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/fontawesome-all.min.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/hybrid.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/featherlight.min.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/perfect-scrollbar.min.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/auto-complete.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/atom-one-dark-reasonable.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/theme.css?1654458090" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/hugo-theme.css?1654458090" rel="stylesheet">
     
-    <link href="/scRNAseq_Physalia_2022/css/theme-red.css?1654202492" rel="stylesheet">
+    <link href="/scRNAseq_Physalia_2022/css/theme-red.css?1654458090" rel="stylesheet">
     
     
 
-    <script src="/scRNAseq_Physalia_2022/js/jquery-3.3.1.min.js?1654202492"></script>
+    <script src="/scRNAseq_Physalia_2022/js/jquery-3.3.1.min.js?1654458090"></script>
 
     <style>
       :root #header + #content > #left > #rlblock_left{
@@ -353,8 +353,8 @@
       <center>
 
     <a href="https://github.com/js2264/scRNAseq_Physalia_2021">Check this website source on Github</a>
-    <p>Created by J. Serizay and O. Ashenberg</p>
-    <p>Copyright 2021</p>
+    <p>Created by J. Serizay, O. Ashenberg & A. Mehta</p>
+    <p>Copyright 2022</p>
 
 </center>
 
@@ -408,7 +408,7 @@ docs/bioconductor.pdf" target="_blank">[PDF]</a>
 <li>Zoom visioconference software</li>
 </ul>
 <h2 id="remote-configuration">Remote configuration</h2>
-<p>The AWS machine is running <code>Ubuntu 18.04.5 LTS</code> and has been set up as follows (note this is specific to <code>Ubuntu 18.04</code>):</p>
+<p>The AWS machine is running <code>Ubuntu 18.04 LTS</code> and has been set up as follows (note this is specific to <code>Ubuntu 18.04</code>):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e">## --- Clean up previous R installs</span>
 sudo apt purge r-base* r-recommended r-cran-*
 sudo apt autoremove
@@ -446,8 +446,7 @@ sudo add-apt-repository <span style="color:#e6db74">&#39;deb https://cloud.r-pro
 add-apt-repository <span style="color:#e6db74">&#34;deb https://cloud.r-project.org/bin/linux/ubuntu `lsb_release -cs` -cran40/&#34;</span>
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 sudo apt update
-sudo apt install <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    r-base r-recommended r-base-core r-base-dev
+sudo apt install r-base r-recommended r-base-core r-base-dev
 </code></pre></div><p>The following packages have been installed (along with their many dependencies, of course!):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e">## --- Install important R packages for single-cell RNA-seq projects</span>
 Rscript -e <span style="color:#e6db74">&#34;
@@ -464,6 +463,8 @@ Rscript -e <span style="color:#e6db74">&#34;
 </span><span style="color:#e6db74">install.packages(&#39;fossil&#39;)
 </span><span style="color:#e6db74">install.packages(&#39;rgl&#39;, dependencies=TRUE)
 </span><span style="color:#e6db74">install.packages(&#39;BiocManager&#39;)
+</span><span style="color:#e6db74">install.packages(&#39;Seurat&#39;)
+</span><span style="color:#e6db74">install.packages(&#39;rliger&#39;)
 </span><span style="color:#e6db74">
 </span><span style="color:#e6db74">## Bioconductor Packages
 </span><span style="color:#e6db74">BiocManager::install(&#39;SingleCellExperiment&#39;, update = FALSE)
@@ -476,27 +477,18 @@ Rscript -e <span style="color:#e6db74">&#34;
 </span><span style="color:#e6db74">BiocManager::install(&#39;SingleR&#39;, update = FALSE)
 </span><span style="color:#e6db74">BiocManager::install(&#39;slingshot&#39;, update = FALSE)
 </span><span style="color:#e6db74">BiocManager::install(&#39;tradeSeq&#39;, update = FALSE)
-</span><span style="color:#e6db74">BiocManager::install(&#39;clusterExperiment&#39;, update = FALSE)
-</span><span style="color:#e6db74">BiocManager::install(&#39;CountClust&#39;, update = FALSE)
 </span><span style="color:#e6db74">BiocManager::install(&#39;velociraptor&#39;, update = FALSE)
 </span><span style="color:#e6db74">BiocManager::install(&#39;BUSpaRse&#39;, update = FALSE)
 </span><span style="color:#e6db74">BiocManager::install(&#39;org.Mm.eg.db&#39;, update = FALSE)
 </span><span style="color:#e6db74">BiocManager::install(&#39;org.Hs.eg.db&#39;, update = FALSE)
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">## Github Packages
-</span><span style="color:#e6db74">devtools::install_github(&#39;satijalab/seurat&#39;, upgrade = &#39;never&#39;)
-</span><span style="color:#e6db74">devtools::install_github(&#39;TaddyLab/maptpx&#39;)
-</span><span style="color:#e6db74">devtools::install_github(&#39;MacoskoLab/liger&#39;)
-</span><span style="color:#e6db74">devtools::install_github(&#39;velocyto-team/velocyto.R&#39;)
-</span><span style="color:#e6db74">devtools::install_github(&#39;theislab/destiny&#39;)
-</span><span style="color:#e6db74">devtools::install_github(&#39;broadinstitute/inferCNV&#39;)
+</span><span style="color:#e6db74">BiocManager::install(&#39;destiny&#39;, update = FALSE)
 </span><span style="color:#e6db74">&#34;</span>
 
-<span style="color:#75715e">## --- Create scRNAseq2021 conda env. and add other dependencies</span>
+<span style="color:#75715e">## --- Create scRNAseq2022 conda env. and add other dependencies</span>
 sudo R --no-save -e <span style="color:#e6db74">&#34;reticulate::install_miniconda()&#34;</span>
-sudo R --no-save -e <span style="color:#e6db74">&#34;reticulate::conda_create(envname = &#39;scRNAseq2021)&#34;</span>
+sudo R --no-save -e <span style="color:#e6db74">&#34;reticulate::conda_create(envname = &#39;scRNAseq2022&#39;)&#34;</span>
 conda init bash
-conda activate scRNAseq2021
+conda activate scRNAseq2022
 conda install -c conda-forge python<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span> umap-learn leidenalg -y
 conda install -c conda-forge numpy <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    scipy <span style="color:#ae81ff">\
@@ -759,19 +751,19 @@ sudo tar -xzvf refdata-gex-mm10-2020-A.tar.gz
     <div style="left: -1000px; overflow: scroll; position: absolute; top: -1000px; border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;">
       <div style="border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;"></div>
     </div>
-    <script src="/scRNAseq_Physalia_2022/js/clipboard.min.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/perfect-scrollbar.min.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/perfect-scrollbar.jquery.min.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/jquery.sticky.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/featherlight.min.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/highlight.pack.js?1654202492"></script>
+    <script src="/scRNAseq_Physalia_2022/js/clipboard.min.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/perfect-scrollbar.min.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/perfect-scrollbar.jquery.min.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/jquery.sticky.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/featherlight.min.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/highlight.pack.js?1654458090"></script>
     <script>hljs.initHighlightingOnLoad();</script>
-    <script src="/scRNAseq_Physalia_2022/js/modernizr.custom-3.6.0.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/learn.js?1654202492"></script>
-    <script src="/scRNAseq_Physalia_2022/js/hugo-learn.js?1654202492"></script>
+    <script src="/scRNAseq_Physalia_2022/js/modernizr.custom-3.6.0.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/learn.js?1654458090"></script>
+    <script src="/scRNAseq_Physalia_2022/js/hugo-learn.js?1654458090"></script>
     
         
-            <script src="/scRNAseq_Physalia_2022/mermaid/mermaid.js?1654202492"></script>
+            <script src="/scRNAseq_Physalia_2022/mermaid/mermaid.js?1654458090"></script>
         
         <script>
             mermaid.initialize({ startOnLoad: true });

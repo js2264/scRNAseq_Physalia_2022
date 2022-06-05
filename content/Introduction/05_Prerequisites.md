@@ -22,7 +22,7 @@ We will also assume that you are familiar with mapping and analysing bulk RNA-se
 
 ## Remote configuration 
 
-The AWS machine is running `Ubuntu 18.04.5 LTS` and has been set up as follows (note this is specific to `Ubuntu 18.04`):
+The AWS machine is running `Ubuntu 18.04 LTS` and has been set up as follows (note this is specific to `Ubuntu 18.04`):
 
 ```sh
 ## --- Clean up previous R installs
@@ -62,8 +62,7 @@ sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic
 add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu `lsb_release -cs` -cran40/"
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 sudo apt update
-sudo apt install \
-    r-base r-recommended r-base-core r-base-dev
+sudo apt install r-base r-recommended r-base-core r-base-dev
 ```
 
 The following packages have been installed (along with their many dependencies, of course!): 
@@ -84,6 +83,8 @@ install.packages('zeallot')
 install.packages('fossil')
 install.packages('rgl', dependencies=TRUE)
 install.packages('BiocManager')
+install.packages('Seurat')
+install.packages('rliger')
 
 ## Bioconductor Packages
 BiocManager::install('SingleCellExperiment', update = FALSE)
@@ -96,27 +97,18 @@ BiocManager::install('plyranges', update = FALSE)
 BiocManager::install('SingleR', update = FALSE)
 BiocManager::install('slingshot', update = FALSE)
 BiocManager::install('tradeSeq', update = FALSE)
-BiocManager::install('clusterExperiment', update = FALSE)
-BiocManager::install('CountClust', update = FALSE)
 BiocManager::install('velociraptor', update = FALSE)
 BiocManager::install('BUSpaRse', update = FALSE)
 BiocManager::install('org.Mm.eg.db', update = FALSE)
 BiocManager::install('org.Hs.eg.db', update = FALSE)
-
-## Github Packages
-devtools::install_github('satijalab/seurat', upgrade = 'never')
-devtools::install_github('TaddyLab/maptpx')
-devtools::install_github('MacoskoLab/liger')
-devtools::install_github('velocyto-team/velocyto.R')
-devtools::install_github('theislab/destiny')
-devtools::install_github('broadinstitute/inferCNV')
+BiocManager::install('destiny', update = FALSE)
 "
 
-## --- Create scRNAseq2021 conda env. and add other dependencies
+## --- Create scRNAseq2022 conda env. and add other dependencies
 sudo R --no-save -e "reticulate::install_miniconda()"
-sudo R --no-save -e "reticulate::conda_create(envname = 'scRNAseq2021)"
+sudo R --no-save -e "reticulate::conda_create(envname = 'scRNAseq2022')"
 conda init bash
-conda activate scRNAseq2021
+conda activate scRNAseq2022
 conda install -c conda-forge python=3 umap-learn leidenalg -y
 conda install -c conda-forge numpy \
     scipy \

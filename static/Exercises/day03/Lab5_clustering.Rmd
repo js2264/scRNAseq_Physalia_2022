@@ -40,8 +40,8 @@ require(tidyverse)
 
 We will prepare scRNAseq data from a PBMC run, provided by 10X and hosted by `Bioconductor` as a package. 
 
-- Which package from `Bioconductor` gives streamlined access to PBMC scRNAseq dataset from 10X Genomics? 
-What does the object contain (type of data, number of cells, batches, organism, ...)? Can you get the same data from somewhere else? 
+> Which package from `Bioconductor` gives streamlined access to PBMC scRNAseq dataset from 10X Genomics?   
+> What does the object contain (type of data, number of cells, batches, organism, ...)? Can you get the same data from somewhere else? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -71,15 +71,6 @@ table(clusters)
 sce <- scran::computeSumFactors(sce, cluster = clusters)
 sce <- scuttle::logNormCounts(sce)
 ```
-
-- Re-perform a "quick" clustering once again, to compare the results with the first clustering. How does it differ? Is this difference important? Should this be taken into account, and if so, why?
-
-<details><summary>Show code</summary><p>
-```{r eval = FALSE}
-clusters2 <- scran::quickCluster(sce)
-table(clusters, clusters2)
-```
-</p></details><br>
 
 ### Feature selection
 
@@ -122,7 +113,7 @@ We can further compress the dataset. The most widely used approach is `PCA`:
 it computes a small number of "components" (typically 5-50) optimally summarizing the variability of the whole dataset, 
 while retaining linearity of the underlying numerical data and being computationallt quite efficient. 
 
-- Try to leverage `scater` package to compute `PCA` embedding of the filtered data by taking into account the technical variability, and compare it to your manually computed PCA. Comment on the changes. 
+> Leverage `scater` package to compute a `PCA` embedding of the filtered data by taking into account the technical variability.
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -138,7 +129,7 @@ p
 ```
 </p></details><br>
 
-- Check the possible arguments for `runPCA`: how does this approach facilitate analysis of large-scale scRNAseq dataset, compared to a more "manual" approach?
+> Check the possible arguments for `runPCA`: how does this approach facilitate analysis of large-scale scRNAseq dataset, compared to a more "manual" approach?
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -169,7 +160,7 @@ it is a flexible and scalable technique for clustering even the largest scRNA-se
 We first build a graph where each node is a cell that is connected by edges to its nearest neighbors in the high-dimensional space. 
 Edges are weighted based on the similarity between the cells involved, with higher weight given to cells that are more closely related.
 
-- Compute graph-based clustering of the PBMC dataset. 
+> Compute graph-based clustering of the PBMC dataset. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -184,7 +175,7 @@ sce$clusters_graph <- factor(sce_clust)
 ```
 </p></details><br>
 
-- What are the main parameters to choose? How do they impact the clustering? 
+> What are the main parameters to choose? How do they impact the clustering? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -211,7 +202,7 @@ it struggles at emphasizing the existence of clusters in complex datasets, when 
     - Multi-Dimensional Scaling (MDS)
     - Non-negative Matrix Factorization (NMF)
 
-- Explore the different dimensional reduction algorithms, trying different hyperparameters combinations. When you run these commands, pay attention to how long each command takes to run! While this run, check the `Help` page for each function (e.g. `?runTSNE`)
+> Explore the different dimensional reduction algorithms, trying different hyperparameters combinations. When you run these commands, pay attention to how long each command takes to run! While this run, check the `Help` page for each function (e.g. `?runTSNE`)
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -223,7 +214,7 @@ reducedDims(sce)
 reducedDim(sce, 'DiffusionMap')[1:10, ]
 ```
 
-- Use the `scater::plotReducedDim()` function to plot cells in each embedding. Comment.
+> Use the `scater::plotReducedDim()` function to plot cells in each embedding. Comment.
 
 ```{r eval = FALSE}
 require(patchwork)
@@ -238,7 +229,7 @@ p<- scater::plotReducedDim(sce, 'PCA', colour_by = 'clusters_graph') + ggtitle('
 
 Leveraging the `bluster` package, different clustering approaches can be performed using a uniformed syntax, to compare their output. 
 
-- Using `clusterSweep()`, compare the effect of different `k` neighbor values when performing graph-based clustering. 
+> Using `clusterSweep()`, compare the effect of different `k` neighbor values when performing graph-based clustering. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -287,7 +278,7 @@ A general strategy is to perform DE tests between pairs of clusters and then com
 markers <- scran::findMarkers(sce, groups = sce$clusters_graph)
 ```
 
-- Find markers strongly overexpressed in each cluster
+> Find markers strongly overexpressed in each cluster. Check `?scran::findMarkers` to find the right options to use.
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -304,13 +295,13 @@ markers <- lapply(markers, function(df) {
 ```
 </p></details><br>
 
-- Plot average expression of the first marker of the first cluster in UMAP
+> Plot average expression of the first marker of the first cluster in UMAP
 
 ```{r eval = FALSE}
 p <- scater::plotReducedDim(sce, 'TSNE', colour_by = markers[[2]][[1]])
 ```
 
-- For each cluster, plot average expression of its markers in reduced dimensions
+> For each cluster, plot average expression of its markers in reduced dimensions
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -335,7 +326,7 @@ p <- ggplot(df, aes(x, y, col = ave_expr)) +
 ```
 </p></details><br>
 
-- For data visualization aficionados... For each cluster, plot average expression of its markers as a dotplot 
+> For data visualization aficionados... For each cluster, plot average expression of its markers as a dotplot 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -385,15 +376,15 @@ table(sce$annotation)
 table(sce$annotation, sce$clusters_graph)
 ```
 
-- Using `scater` and `SingleR` utilities, check the annotation score for each cell in the scRNAseq. Did the automated annotation work robuslty? How does it compare to our defined clusters? Is automated annotation as sensitive as graph-based clustering?
+> Using `scater` and `SingleR` utilities, visually compare the annotation scores for cells in each cluster. Did the automated annotation work robuslty? How does it compare to our clustering? Is automated annotation as sensitive as graph-based clustering?
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
 p <- SingleR::plotScoreHeatmap(prediction_types)
 p <- scater::plotReducedDim(sce, 'TSNE', colour_by = 'annotation') + ggtitle('Automated annotation')
 p <- pheatmap::pheatmap(
-    log2(table(Assigned = sce$annotation, Cluster = sce$clusters_graph)+10), 
-    color=colorRampPalette(c("white", "darkred"))(101)
+    log2(table(Annotation = sce$annotation, Cluster = sce$clusters_graph)+10), 
+    color = colorRampPalette(c("white", "darkred"))(101)
 )
 ```
 </p></details><br>

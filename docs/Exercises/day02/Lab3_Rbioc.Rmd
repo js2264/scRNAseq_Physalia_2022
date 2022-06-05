@@ -67,7 +67,7 @@ The two main concepts behind `Bioconductor`'s success are the **non-redundant** 
 
 ### Important R concepts: 
 
-> `tibble` tables: 
+#### `tibble` tables: 
 
 `tibbles` are built on the fundamental `data.frame` objects. They follow "tidy" concepts, all gathered in a common [`tidyverse`](https://www.tidyverse.org/). 
 This set of key concepts help general data investigation and data visualization through a set of associated packages such as `ggplot2`. 
@@ -83,7 +83,7 @@ dat <- tibble(
 dat
 ```
 
-> Reading text files into `tibbles`
+> Import a text file into `tibbles`
 
 `tibbles` can be created from text files (or Excel files) using the `readr` package (part of `tidyverse`)
 
@@ -92,10 +92,10 @@ genes <- read_tsv('~/Share/GSM4486714_AXH009_genes.tsv', col_names = c('ID', 'Sy
 genes
 ```
 
-> Handling of `tibbles`: 
+#### Handling of `tibbles`: 
 
 `tibbles` can be readily "sliced" (i.e. selecting rows by number/name), "filtered" (i.e. selecting rows by condition) and columns can be "selected". 
-All these operations are performed using verbs (most of them provided by the `dplyr` package, part of `tidyverse`). 
+All these operations are performed using _verbs_ (most of them provided by the `dplyr` package, part of `tidyverse`). 
 
 ```{r eval = FALSE}
 slice(genes, 1:4)
@@ -113,7 +113,7 @@ Columns can also be quickly added/modified using the `mutate` verb.
 mutate(genes, chr = sample(1:22, n(), replace = TRUE))
 ```
 
-> `%>%` pipe: 
+#### `%>%` pipe: 
 
 Actions on `tibbles` can be piped as a chain, just like `|` pipes `stdout` as the `stdin` of the next command in `bash`. 
 In this case, the first argument is always the output of the previous function and is ommited. 
@@ -129,7 +129,7 @@ read_tsv('~/Share/GSM4486714_AXH009_genes.tsv', col_names = c('ID', 'Symbol')) %
 
 ### Important Bioconductor concepts: 
 
-> `SummarizedExperiment` class:
+#### `SummarizedExperiment` class:
 
 The most fundamental class used to hold the content of large-scale quantitative analyses, such as counts of RNA-seq experiments, or high-throughput cytometry experiments or proteomics experiments. 
 
@@ -157,7 +157,7 @@ data(airway)
 airway
 ```
 
-- What are the dimensions of the dataset? What type of quantitative data is stored? Which features are assessed? 
+> What are the dimensions of the dataset? What type of quantitative data is stored? Which features are assessed? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -167,7 +167,7 @@ colData(airway)
 ```
 </p></details><br>
 
-- Can you create a subset of the data corresponding to `LRG` genes in untreated samples? 
+> Can you create a subset of the data corresponding to `LRG` genes in untreated samples? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -176,7 +176,7 @@ untreated_LRG
 ```
 </p></details><br>
 
-> `GenomicRanges` class (a.k.a. `GRanges`): 
+#### `GenomicRanges` class (a.k.a. `GRanges`): 
 
 `GenomicRanges` are a type of `IntervalRanges`, they are useful to describe genomic intervals. 
 Each entry in a `GRanges` object has a `seqnames()`, a `start()` and an `end()` coordinates, a `strand()`, as well as associated metadata (`mcols()`). 
@@ -206,7 +206,7 @@ gr %>%
     table()
 ```
 
-- Can you find a way to easily read common input files such as `bed` or `gff` files into `GRanges`? 
+> Can you find a way to easily read common input files such as `bed` or `gff` files into `GRanges`? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -218,7 +218,7 @@ genes3
 ```
 </p></details><br>
 
-- How would you have proceeded without `rtracklayer`? Check the `start` coordinates: what do you see? Comment on the interest of using `Bioconductor`. 
+> How would you have proceeded without `rtracklayer`? Check the `start` coordinates: what do you see? Comment on the interest of using `Bioconductor`. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -237,7 +237,6 @@ genes3_manual <- read_tsv('~/Share/GRCm39_genes.gff3', col_names = FALSE, commen
 genes3_manual
 head(start(genes2))
 head(start(genes2_manual))
-
 ```
 </p></details><br>
 
@@ -290,7 +289,7 @@ reducedDims(sce)
 head(reducedDim(sce, 'diffusion'))
 ```
 
-- Check the `colData()` output of the `sce` object. What information is stored there? How can you access the different objects stored in `colData`? 
+> Check the `colData()` output of the `sce` object. What information is stored there? How can you access the different objects stored in `colData`? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -302,7 +301,7 @@ head(sce$sizeFactor)
 ```
 </p></details><br>
 
-- Are there any reduced dimensionality representation of the data stored in the `sce` object? How can we run a `PCA` using normalized counts?
+> Are there any reduced dimensionality representation of the data stored in the `sce` object? How can we run a `PCA` using normalized counts?
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -315,7 +314,7 @@ reducedDim(sce, "pca") <- pca$x
 ```
 </p></details><br>
 
-- Now, let's compute a `UMAP` embedding from this `PCA` and compare it to the `diffusion` embedding. 
+> Now, let's compute a `UMAP` embedding from this `PCA` and compare it to the `diffusion` embedding. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -330,6 +329,8 @@ p <- p1 + p2 + p3
 p
 ```
 </p></details><br>
+
+(We will see more advanced ways of reducing scRNAseq data dimensionality in the coming lectures...)
 
 ### scRNAseq in R
 
@@ -358,7 +359,7 @@ sce_seurat
 sce2 <- Seurat::as.SingleCellExperiment(sce_seurat)
 ```
 
-- Do you see any change between `sce` and the corresponding, "back-converted", `sce2` objects? Explain these differences.
+> Do you see any change between `sce` and the corresponding, "back-converted", `sce2` objects? Explain these differences.
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -370,7 +371,7 @@ colData(sce2)
 ```
 </p></details><br>
 
-- Try and access the underlying raw or normalized data from the `sce_seurat` object. How does it compare to data access from an `SingleCellExperiment` object? 
+> Try and access the underlying raw or normalized data from the `sce_seurat` object. How does it compare to data access from an `SingleCellExperiment` object? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -394,7 +395,7 @@ head(Seurat::Embeddings(object = sce_seurat, 'umap')[1:10,])
 
 ## 4. Reading scRNAseq data 
 
-- Try to load the raw `10X` single-cell RNA-seq data downloaded yesterday (from `Lier et al.`) into a **SingleCellExperiment** object using `DropletUtils` package. 
+> Try to load the raw `10X` single-cell RNA-seq data downloaded yesterday (from `Lier et al.`) into a **SingleCellExperiment** object using `DropletUtils` package. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -408,7 +409,7 @@ rowData(sce)
 
 Public single-cell RNA-seq data can be retrieved from within R directly, thanks to several data packages, for instance `scRNAseq` or `HCAData`. 
 
-- Check out the `He et al., Genome Biol. 2020` paper. Can you find a way to load the scRNAseq data from this paper without having to leave the `R` console? 
+> Check out the `He et al., Genome Biol. 2020` paper. Can you find a way to load the scRNAseq data from this paper without having to leave the `R` console? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -417,8 +418,7 @@ organs
 ```
 </p></details><br>
 
-- The interest of this approach is that one can recover a full-fledged **SingleCellExperiment** (often) provided by the authors of the corresponding study. 
-This means that lots of information, such as batch ID, clustering, cell annotation, etc., may be readily available. Check the data available for cells/features in the dataset from `He et al.`. 
+> The interest of this approach is that one can recover a full-fledged **SingleCellExperiment** (often) provided by the authors of the corresponding study. This means that lots of information, such as batch ID, clustering, cell annotation, etc., may be readily available. Check the data available for cells/features in the dataset from `He et al.`. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -428,8 +428,7 @@ table(organs$reclustered.fine, organs$Tissue)
 ```
 </p></details><br>
 
-- Does the **SingleCellExperiment** object corresponding to `He et al., Genome Biol. 2020` data (obtained through `scRNAseq` package) contain normalized data? 
-What about cell projections on embedded spaces? Try and add them. 
+> Does the **SingleCellExperiment** object corresponding to `He et al., Genome Biol. 2020` data (obtained through `scRNAseq` package) contain normalized data? What about cell projections on embedded spaces? Try some visualization approaches. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}

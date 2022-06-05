@@ -1602,7 +1602,7 @@ font-weight: bold
 <p>Next, explore the contents of the sequencing directory:</p>
 <p><code>ls Share/data_wrangling/cellranger-tiny-bcl-1.2.0</code></p>
 <p>Now we can demultiplex our bcl files by running the following command in the terminal:</p>
-<p><code>cellranger mkfastq --id=tiny-bcl --run=Share/data_wrangling/cellranger-tiny-bcl-1.2.0 --csv=Share/data_wrangling/cellranger-tiny-bcl-simple-1.2.0.csv</code></p>
+<p><code>cellranger mkfastq --id tiny-bcl --run Share/data_wrangling/cellranger-tiny-bcl-1.2.0 --csv Share/data_wrangling/cellranger-tiny-bcl-simple-1.2.0.csv</code></p>
 <p>The output folders can be viewed by running the <code>ls</code> command:</p>
 <p><code>ls tiny-bcl/outs/fastq_path/H35KCBCXY</code></p>
 <p>Look at the index read (I1), read 1 (R1), and read (R2) files using the command <code>less fastq_file_name.gz</code>. You can type <code>q</code> in the terminal to leave this view.</p>
@@ -1612,7 +1612,7 @@ font-weight: bold
 <h2>Generating gene count matrices with cellranger count</h2>
 <p>Go to the <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/algorithms/overview">cellranger count algorithm overiew</a> and read the section on <strong>Alignment</strong> (Read Trimming, Genome Alignment, MAPQ adjustment, Transcriptome Alignment, UMI Counting).</p>
 <p>In the terminal run the command:</p>
-<p><code>cellranger count --id=counts --transcriptome=/opt/refdata-gex-mm10-2020-A --fastqs=tiny-bcl/outs/fastq_path/H35KCBCXY/test_sample2 --sample=test_sample2</code></p>
+<p><code>cellranger count --id counts --transcriptome ~/Share/refdata-gex-mm10-2020-A --fastqs tiny-bcl/outs/fastq_path/H35KCBCXY/test_sample2 --sample test_sample2</code></p>
 <p>While the count command is running, read about the <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices">format of the feature-barcode matrices</a>.</p>
 <p>Once the count command is finished running, the pipeline outputs can be viewed as follows:</p>
 <p><code>ls counts/outs</code></p>
