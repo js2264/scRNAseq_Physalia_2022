@@ -1,8 +1,8 @@
 ---
 title: "3. Day 03"
 day: "Day 03"
-presentation1: "day03/Lecture5_batchcorrection.pdf"
-presentation2: "day03/Lecture6_pseudotime.pdf"
+presentation1: "day03/Lecture4_clustering.pdf"
+presentation2: "day03/Lecture5_batchcorrection.pdf"
 practical1: "day03/Lab5_clustering"
 practical2: "day03/Lab6_batch_correction"
 ---
@@ -11,10 +11,10 @@ practical2: "day03/Lab6_batch_correction"
 
 ## Presentations for {{< param "day" >}}
 
-- **\[1h 15\]** Lecture 5 - Data integration and batch effect correction
+- **\[1h 15\]** Lecture 4 - Identifying cell populations
 [[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation1" >}})
 
-- **\[1h 15\]** Lecture 6 - Trajectories and pseudotimes
+- **\[1h 15\]** Lecture 5 - Data integration and batch effect correction
 [[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation2" >}})
 
 ---

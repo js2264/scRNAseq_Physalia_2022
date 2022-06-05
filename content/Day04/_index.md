@@ -1,8 +1,8 @@
 ---
 title: "4. Day 04"
 day: "Day 04"
-presentation1: "day04/Lecture7_epigenome.pdf"
-presentation2: "day04/Lecture8_spatial-transcriptomics.pdf"
+presentation1: "day04/Lecture6_pseudotime.pdf"
+presentation2: "day04/Lecture7_epigenome.pdf"
 practical1: "day04/Lab7_pseudotime"
 practical2: "day04/Lab8_scATACseq"
 ---
@@ -11,10 +11,10 @@ practical2: "day04/Lab8_scATACseq"
 
 ## Presentations for {{< param "day" >}}
 
-- **\[1h 15\]** Lecture 7 - Advances in single-cell genomics: the epigenome
+- **\[1h 15\]** Lecture 6 - Trajectories and pseudotimes
 [[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation1" >}})
 
-- **\[1h 15\]** Lecture 8 - Advances in single-cell genomics: spatial transcriptomics
+- **\[1h 15\]** Lecture 7 - Advances in single-cell genomics: the epigenome
 [[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation2" >}})
 
 ---

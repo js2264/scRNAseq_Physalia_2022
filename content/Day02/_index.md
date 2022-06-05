@@ -2,7 +2,6 @@
 title: "2. Day 02"
 day: "Day 02"
 presentation1: "day02/Lecture3_qualitycontrol.pdf"
-presentation2: "day02/Lecture4_clustering.pdf"
 practical1: "day02/Lab3_Rbioc"
 practical2: "day02/Lab4_data_wrangling_scRNAseq"
 ---
@@ -21,9 +20,6 @@ an idea for future projects.
 
 - **\[1h 15\]** Lecture 3 - Quality control for scRNAseq data 
 [[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation1" >}})
-
-- **\[1h 15\]** Lecture 4 - Identifying cell populations
-[[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation2" >}})
 
 ---
 

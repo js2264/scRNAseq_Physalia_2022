@@ -38,8 +38,6 @@ Classes are from:
   - Mapping sequencing data with Cellranger
   - Quality Control reports (CellRanger, dropEst, fastqc)
 
-### Flash talks [Everybody] 
-
 ## Tuesday – Classes from 14:00 to 20:00 (Paris time)
 
 ### Lab 3 - Introduction to R/Bioconductor [Jacques] 
@@ -54,19 +52,21 @@ Classes are from:
   - Barcode swapping
   - Regression with technical covariates
 
+### Lab 4 – scRNA-Seq data wrangling [Orr]  
+  - Data structure
+  - Data filtering
+  - Exploratory data analysis
+
+### Flash talks [Everybody] 
+
+## Wednesday – Classes from 14:00 to 20:00 (Paris time)
+
 ### Lecture 4 - Identifying cell populations [Jacques] 
   - Feature selection
   - Dimensionality reduction
   - Graph-based clustering and other cluster methods
   - Assigning cluster identity
   - Differential expression tests
-
-### Lab 4 – scRNA-Seq data wrangling [Orr]  
-  - Data structure
-  - Data filtering
-  - Exploratory data analysis
-
-## Wednesday – Classes from 14:00 to 20:00 (Paris time)
 
 ### Lab 5 – Identifying Cell Populations: dimensionality reduction, clustering and annotation [Jacques] 
   - Feature selection
@@ -84,14 +84,14 @@ Classes are from:
   - Comparison of batch correction methods
   - Choosing the optimal batch correction approach
 
+## Thursday – Classes from 14:00 to 20:00 (Paris time)
+
 ### Lecture 6 - Trajectories and pseudotimes [Jacques] 
   - Trajectory inference
   - Popular tools and packages for trajectory analysis (https://github.com/dynverse/dynmethods#list-of-included-methods)
   - Pseudotime inference
   - RNA velocity 
   - Differential expression through pseudotime
-
-## Thursday – Classes from 14:00 to 20:00 (Paris time)
 
 ### Lab 7 - Inferring differentiation trajectories and pseudotime [Jacques] 
   - Infering trajectory in sperm cell lineage
@@ -100,13 +100,13 @@ Classes are from:
 
 ### Lecture 7 - Advances in single-cell genomics: the epigenome [Arnav] 
 
-### Lecture 8 - Advances in single-cell genomics: spatial transcriptomics [Orr] 
-
 ### Lab 8 - Single-cell ATAC-Seq analysis [Arnav] 
 
 ## Friday – Classes from 14:00 to 20:00 (Paris time)
 
-Friday will be divided in three parts: 
+### Lecture 8 - Advances in single-cell genomics: spatial transcriptomics [Orr] 
+
+Friday will then be divided in three parts: 
 
 - Morning (1h): "Journal club": discussion of method papers
 - Morning & afternoon (1h + 1h30): Group projects: analysing scRNA-seq data by yourself, from A to Z

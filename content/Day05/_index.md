@@ -1,7 +1,13 @@
 ---
 title: "5. Day 05"
 day: "Day 05"
+presentation1: "day05/Lecture8_spatial-transcriptomics.pdf"
 ---
+
+## Presentations for {{< param "day" >}}
+
+- **\[1h 15\]** Lecture 8 - Advances in single-cell genomics: spatial transcriptomics
+[[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation1" >}})
 
 ## Journal club (1h)
 
