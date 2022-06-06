@@ -85,6 +85,7 @@ install.packages('rgl', dependencies=TRUE)
 install.packages('BiocManager')
 install.packages('Seurat')
 install.packages('rliger')
+install.packages('Signac')
 
 ## Bioconductor Packages
 BiocManager::install('SingleCellExperiment', update = FALSE)
