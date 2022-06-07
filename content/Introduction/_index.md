@@ -19,5 +19,5 @@ time based on your internet connection (several hundreds MB).
 
 ## To log in to the course AWS machine: 
 
-[Simply go to the following web page](http://35.89.123.49:8787/): `http://35.89.123.49:8787/`
+[Simply go to the following web page](http://54.202.92.235:8787/): `http://54.202.92.235:8787/`
 

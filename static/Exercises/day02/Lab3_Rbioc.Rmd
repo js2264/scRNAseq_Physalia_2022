@@ -23,7 +23,7 @@ require(scRNAseq)
 
 ## 1. Installing packages in `R` 
 
-"Hey, I've heard so many good things about this piece of software, it's called 'Seurat'? Heard of it? I wanna try it out soooo badly!"
+"Hey, I've heard so many good things about this piece of software, it's called 'slingshot'? Heard of it? I really want to try it out on my dataset!!"
 
 In other words: "how do I install this or that brand new cutting-edge fancy `package`?"
 
@@ -65,7 +65,7 @@ While `CRAN` is a repository of general-purpose packages, `Bioconductor` is the 
 The two main concepts behind `Bioconductor`'s success are the **non-redundant** classes of objects it provides and their **inter-operability**. 
 [Huber et al., Nat. Methods 2015](https://www.nature.com/articles/nmeth.3252) summarizes it well.  
 
-### Important R concepts: 
+### 2A. Important R concepts: 
 
 #### `tibble` tables: 
 
@@ -127,7 +127,7 @@ read_tsv('~/Share/GSM4486714_AXH009_genes.tsv', col_names = c('ID', 'Symbol')) %
     slice_head(n = 3)
 ```
 
-### Important Bioconductor concepts: 
+### 2B. Important Bioconductor concepts: 
 
 #### `SummarizedExperiment` class:
 
@@ -140,7 +140,7 @@ Generally speaking, a `SummarizedExperiment` object contains matrix-like objects
 Information specific to genes and samples are stored in "parallel" data frames, for example to store gene locations, tissue of expression, biotypes (for genes) or batch, generation date, or machine ID (for samples). 
 On top of that, metadata are also stored in the object (to store description of a project, ...). 
 
-An important difference with S3 `list`-like objects usually used in `R` is most of the underlying data (organized in `"slots"`) 
+An important difference with S3 `list`-like objects usually used in `R` is that most of the underlying data (organized in precisely structured `"slots"`) 
 is accessed using `getter` functions, rather than the familiar `$` or `[`. Here are some important `getters`: 
 
     - `assay()`, `assays()`: Extrant matrix-like or list of matrix-like objects of identical dimensions. Since the objects are `matrix`-like, `dim()`, `dimnames()`, and 2-dimensional `[`, `[<-` methods are available. 
@@ -206,15 +206,13 @@ gr %>%
     table()
 ```
 
-> Can you find a way to easily read common input files such as `bed` or `gff` files into `GRanges`? 
+> Can you find a way to easily read common input files such as `bed` files into `GRanges`? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
 library(rtracklayer)
 genes2 <- import('~/Share/GRCm39_genes.bed')
 genes2
-genes3 <- import('~/Share/GRCm39_genes.gff3')
-genes3
 ```
 </p></details><br>
 
@@ -230,19 +228,12 @@ genes2_manual <- read_tsv('~/Share/GRCm39_genes.bed', col_names = FALSE) %>%
 genes2_manual
 head(start(genes2))
 head(start(genes2_manual))
-genes3_manual <- read_tsv('~/Share/GRCm39_genes.gff3', col_names = FALSE, comment = '#') %>% 
-    drop_na() %>%
-    purrr::set_names(c('chr', 'source', 'type', 'start', 'stop', 'score', 'strand', 'empty', 'info')) %>% 
-    makeGRangesFromDataFrame(keep.extra.columns = TRUE)
-genes3_manual
-head(start(genes2))
-head(start(genes2_manual))
 ```
 </p></details><br>
 
 ## 3. CRAN & Bioconductor approaches to scRNAseq
 
-### scRNAseq in Bioconductor
+### 3A. scRNAseq in Bioconductor
 
 For single-cell RNA-seq projects, `Bioconductor` has been introducting new classes and standards very rapidly in the past few years. 
 Notably, several packages are increasingly becoming central for single-cell analysis: 
@@ -280,13 +271,14 @@ dim(sce)
 assays(sce)
 ```
 
-Important slots for scRNAseq studies can also be accessed:
+Quantitative metrics for scRNAseq studies can also be stored in `assays`:
 
 ```{r eval = FALSE}
+assays(sce)
+assays(sce, 'counts')[1:10, 1:10]
+assays(sce, 'logcounts')[1:10, 1:10]
 counts(sce)[1:10, 1:10]
 logcounts(sce)[1:10, 1:10]
-reducedDims(sce)
-head(reducedDim(sce, 'diffusion'))
 ```
 
 > Check the `colData()` output of the `sce` object. What information is stored there? How can you access the different objects stored in `colData`? 
@@ -310,29 +302,23 @@ pca <- prcomp(t(logcounts(sce)))
 names(pca)
 dim(pca$x)
 head(pca$x[, 1:50])
-reducedDim(sce, "pca") <- pca$x
 ```
 </p></details><br>
 
-> Now, let's compute a `UMAP` embedding from this `PCA` and compare it to the `diffusion` embedding. 
+> Now, let's compute a `UMAP` embedding from this `PCA` and compare it to the `PCA` embedding. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
-umap <- uwot::umap(reducedDim(sce, "pca"))
+umap <- uwot::umap(pca)
 colnames(umap) <- c('UMAP1', 'UMAP2')
-reducedDim(sce, "umap") <- umap
-library(patchwork)
-p1 <- scater::plotReducedDim(sce, 'pca', colour_by = 'label', text_by = 'label') + ggtitle('PCA')
-p2 <- scater::plotReducedDim(sce, 'umap', colour_by = 'label', text_by = 'label') + ggtitle('UMAP')
-p3 <- scater::plotReducedDim(sce, 'diffusion', colour_by = 'label', text_by = 'label') + ggtitle('Diffusion')
-p <- p1 + p2 + p3
-p
+plot(pca[,1], pca[,2])
+plot(umap[,1], umap[,2])
 ```
 </p></details><br>
 
-(We will see more advanced ways of reducing scRNAseq data dimensionality in the coming lectures...)
+We will see more advanced ways of reducing scRNAseq data dimensionality in the coming lectures and labs...
 
-### scRNAseq in R
+### 3B. scRNAseq in R
 
 [`Seurat`](https://satijalab.org/seurat/articles/get_started.html) is another very popular ecosystem to investigate scRNAseq data. 
 It is primarily developed and maintained by [the Sajita Lab](https://satijalab.org/seurat). 
@@ -342,11 +328,11 @@ It also has a [very extended support](https://github.com/satijalab/seurat/discus
 All in all, is provides a (somewhat) simple workflow to start investigating scRNAseq data. 
 
 It is important to chose one standard that you feel comfortable with yourself. Which standard provides the most 
-intuitive approach for you? Do you prefer a unique, "plug-n-play" workflow (`Seurat`-style), or a modular approach (`Bioconductor`-style)? 
+intuitive approach for you? Do you prefer an "all-in-one, plug-n-play" workflow (`Seurat`-style), or a modular approach (`Bioconductor`-style)? 
 Which documentation is easier to read for you, a central full-featured website with extensive examples (`Seurat`-style), 
 or "programmatic"-style vignettes (`Bioconductor`-style)? 
 
-This course will sometimes use `Seurat`-based methods, and sometimes `Bioconductor`-based methods. 
+This course will mostly rely on `Bioconductor`-based methods, but sometimes use `Seurat`-based methods.s
 In the absence of coordination of data structures, the next best solution is to write functions to 
 coerce an object from a certain class to another class (i.e. `Seurat` to `SingleCellExperiment`, or vice-versa).
 Luckily, this is quite straightforward in `R` for these 2 data classes: 
@@ -425,19 +411,6 @@ organs
 colData(organs)
 table(organs$Tissue)
 table(organs$reclustered.fine, organs$Tissue)
-```
-</p></details><br>
-
-> Does the **SingleCellExperiment** object corresponding to `He et al., Genome Biol. 2020` data (obtained through `scRNAseq` package) contain normalized data? What about cell projections on embedded spaces? Try some visualization approaches. 
-
-<details><summary>Show code</summary><p>
-```{r eval = FALSE}
-library(scater)
-library(patchwork)
-p1 <- plotReducedDim(organs, 'tSNE', colour_by = 'Tissue', by_exprs_values = 'counts', text_by = 'Tissue') + ggtitle('Tissues')
-p2 <- plotReducedDim(organs, 'tSNE', colour_by = 'ENSG00000118137', by_exprs_values = 'counts', text_by = 'Tissue') + ggtitle('APOA1')
-p <- p1 + p2
-p
 ```
 </p></details><br>
 

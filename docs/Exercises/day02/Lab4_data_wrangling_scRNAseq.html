@@ -1642,31 +1642,26 @@ font-weight: bold
     <h2><a href="#content">Lab 4 - Single-cell RNA-seq data wrangling</a></h2>
     <div id="toc">
       <ul>
-      <li><a href="#goal">Goal</a></li>
-      <li><a href="#introduction">Introduction</a>
+      <li><a href="#introduction">1. Introduction</a>
       <ul>
-      <li><a href="#load-necessary-packages">Load necessary packages</a></li>
-      <li><a href="#read-in-nsclc-counts-matrix.">Read in NSCLC counts matrix.</a></li>
-      <li><a href="#lets-examine-the-sparse-counts-matrix">Let’s examine the sparse counts matrix</a></li>
-      <li><a href="#how-big-is-the-matrix">How big is the matrix?</a></li>
-      <li><a href="#how-much-memory-does-a-sparse-matrix-take-up-relative-to-a-dense-matrix">How much memory does a sparse matrix take up relative to a dense matrix?</a></li>
+      <li><a href="#a.-load-necessary-packages">1A. Load necessary packages</a></li>
+      <li><a href="#b.-read-in-pancreas-counts-matrix.">1B. Read in Pancreas counts matrix.</a></li>
       </ul></li>
-      <li><a href="#filtering-low-quality-cells">Filtering low-quality cells</a>
+      <li><a href="#basic-qcs">2. Basic QCs</a></li>
+      <li><a href="#access-to-stored-informations">3. Access to stored informations</a>
       <ul>
-      <li><a href="#look-at-the-summary-counts-for-genes-and-cells">Look at the summary counts for genes and cells</a></li>
-      <li><a href="#plot-cells-ranked-by-their-number-of-detected-genes.">Plot cells ranked by their number of detected genes.</a></li>
+      <li><a href="#a.-assay-slots">3A. Assay slots</a></li>
+      <li><a href="#b.-embeddings">3B. Embeddings</a></li>
+      <li><a href="#c.-multiple-modalities">3C. Multiple modalities</a></li>
       </ul></li>
-      <li><a href="#beginning-with-seurat-httpsurldefense.comv3__httpsatijalab.orgseurat__jfdnoqoxpb6uzw091njvxquxnzkhaubuwfap-w0lpkn3iqcrfg_wcz4dqvsqmo03swrirbrsjyzj0im_xlxzfnr">Beginning with Seurat: <span>https://urldefense.com/v3/__http://satijalab.org/seurat/__</span>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_xlxzFnR$</a>
+      <li><a href="#filtering-cells-and-features">4. Filtering cells and features</a>
       <ul>
-      <li><a href="#creating-a-seurat-object">Creating a Seurat object</a></li>
+      <li><a href="#a.-pre-filtering">4A. Pre-filtering</a></li>
+      <li><a href="#a.-filtering-low-quality-cells-mitochondrial-counts">4A. Filtering low-quality cells: mitochondrial counts</a></li>
+      <li><a href="#b.-checking-housekeeping-genes">4B. Checking housekeeping genes</a></li>
+      <li><a href="#c.-checking-gene-set-expression">4C. Checking gene set expression</a></li>
       </ul></li>
-      <li><a href="#preprocessing-step-1-filter-out-low-quality-cells">Preprocessing step 1 : Filter out low-quality cells</a></li>
-      <li><a href="#examine-contents-of-seurat-object">Examine contents of Seurat object</a>
-      <ul>
-      <li><a href="#preprocessing-step-2-expression-normalization">Preprocessing step 2 : Expression normalization</a></li>
-      </ul></li>
-      <li><a href="#detection-of-variable-genes-across-the-single-cells">Detection of variable genes across the single cells</a></li>
-      <li><a href="#gene-set-expression-across-cells">Gene set expression across cells</a></li>
+      <li><a href="#session-info">Session info</a></li>
       </ul>
     </div>
     <div id="postamble" data-toggle="wy-nav-shift" class="status">
@@ -1679,289 +1674,388 @@ font-weight: bold
    
 <!-- Don't indent these lines or it will mess pre blocks indentation --> 
 <div id="main">
-<div id="goal" class="section level2">
-<h2>Goal</h2>
+<p><strong>Aims:</strong></p>
 <ul>
 <li>To give you experience with the analysis of single cell RNA sequencing (scRNA-seq) including performing quality control and identifying cell type subsets.</li>
-<li>To introduce you to scRNA-seq analysis using the Seurat package.</li>
+<li>To introduce you to scRNA-seq analysis using Bioconductor packages.</li>
 </ul>
-</div>
 <div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<h2>1. Introduction</h2>
 <p>Data produced in a single cell RNA-seq experiment has several interesting characteristics that make it distinct from data produced in a bulk population RNA-seq experiment. Two characteristics that are important to keep in mind when working with scRNA-Seq are drop-out (the excessive amount of zeros due to limiting mRNA) and the potential for quality control (QC) metrics to be confounded with biology. This combined with the ability to measure heterogeniety from cells in samples has shifted the field away from the typical analysis in population-based RNA-Seq. Here we demonstrate some approaches to quality control, followed by identifying and analyzing cell subsets.</p>
-<p>For this tutorial, we will be analyzing the a dataset of Non-Small Cell Lung Cancer Cells (NSCLC) freely available from 10X Genomics (<a href="https://urldefense.com/v3/__https://support.10xgenomics.com/single-cell-vdj/datasets/2.2.0/vdj_v1_hs_nsclc_5gex__" class="uri">https://urldefense.com/v3/__https://support.10xgenomics.com/single-cell-vdj/datasets/2.2.0/vdj_v1_hs_nsclc_5gex__</a>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_5NdRp5B$ ), using the Seurat R package (<a href="https://urldefense.com/v3/__http://satijalab.org/seurat/__" class="uri">https://urldefense.com/v3/__http://satijalab.org/seurat/__</a>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_xlxzFnR$ ), a popular and powerful set of tools to conduct scRNA-seq analysis in R. In this dataset, there are 7802 single cells that were sequenced on the Illumina NovaSeq 6000. Please note this tutorial borrows heavily from Seurat’s tutorials, so feel free to go through them in more detail.</p>
-<div id="load-necessary-packages" class="section level3">
-<h3>Load necessary packages</h3>
+<p>For this tutorial, we will be analyzing the a dataset of Non-Small Cell Lung Cancer Cells (NSCLC) freely available from 10X Genomics (<a href="https://support.10xgenomics.com/single-cell-vdj/datasets/2.2.0/vdj_v1_hs_nsclc_5gex__" class="uri">https://support.10xgenomics.com/single-cell-vdj/datasets/2.2.0/vdj_v1_hs_nsclc_5gex__</a>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_5NdRp5B$ ), using the Seurat R package (<a href="https://urldefense.com/v3/__http://satijalab.org/seurat/__" class="uri">https://urldefense.com/v3/__http://satijalab.org/seurat/__</a>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_xlxzFnR$ ), a popular and powerful set of tools to conduct scRNA-seq analysis in R. In this dataset, there are 7802 single cells that were sequenced on the Illumina NovaSeq 6000. Please note this tutorial borrows heavily from Seurat’s tutorials, so feel free to go through them in more detail.</p>
+<div id="a.-load-necessary-packages" class="section level3">
+<h3>1A. Load necessary packages</h3>
 <p>When loading libraries, we are asking R to load code for us written by someone else. It is a convenient way to leverage and reproduce methodology developed by others.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">library</span>(Seurat)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="kw">library</span>(dplyr)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a><span class="kw">library</span>(Matrix)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="kw">library</span>(gdata)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="kw">library</span>(ggplot2)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="kw">library</span>(SingleCellExperiments)</span></code></pre></div>
 </div>
-<div id="read-in-nsclc-counts-matrix." class="section level3">
-<h3>Read in NSCLC counts matrix.</h3>
-<p>The data for Non-Small Cell Lung Cancer Cells (NSCLC) is freely available from 10X Genomics (<a href="https://urldefense.com/v3/__https://support.10xgenomics.com/single-cell-vdj/datasets/2.2.0/vdj_v1_hs_nsclc_5gex__" class="uri">https://urldefense.com/v3/__https://support.10xgenomics.com/single-cell-vdj/datasets/2.2.0/vdj_v1_hs_nsclc_5gex__</a>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_5NdRp5B$ ). We start by reading in the counts matrix generated by the Cell Ranger count program.</p>
-<p>Task: Change the directory name to read your data</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a>dirname &lt;-<span class="st"> &quot;~/Share/&quot;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>counts_matrix_filename =<span class="st"> </span><span class="kw">paste0</span>(dirname,<span class="st">&quot;/GRCh38/&quot;</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a>counts &lt;-<span class="st"> </span><span class="kw">Read10X</span>(<span class="dt">data.dir =</span> counts_matrix_filename)  <span class="co"># Seurat function to read in 10x count data</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a><span class="co"># To minimize memory use on the docker - choose only the first 1000 cells</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a>counts &lt;-<span class="st"> </span>counts[, <span class="dv">1</span><span class="op">:</span><span class="dv">1000</span>]</span></code></pre></div>
-</div>
-<div id="lets-examine-the-sparse-counts-matrix" class="section level3">
-<h3>Let’s examine the sparse counts matrix</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a>counts[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>]</span></code></pre></div>
-<p>Here we see the upper left corner of the sparse matrix. The columns are indexed by 10x cell barcodes (each 16 nt long), and the rows are the gene names. We mentioned these matrices are sparse, here we see only zeroes (indicated by the “.” symbol); this is the most common value in these sparse matrices. Next, let us look at the dimensions of this matrix.</p>
-</div>
-<div id="how-big-is-the-matrix" class="section level3">
-<h3>How big is the matrix?</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="kw">dim</span>(counts) <span class="co"># report number of genes (rows) and number of cells (columns)</span></span></code></pre></div>
-<p>Here we see the counts matrix has 33694 genes and 7802 cells.</p>
-</div>
-<div id="how-much-memory-does-a-sparse-matrix-take-up-relative-to-a-dense-matrix" class="section level3">
-<h3>How much memory does a sparse matrix take up relative to a dense matrix?</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="kw">object.size</span>(counts) <span class="co"># size in bytes</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a><span class="kw">object.size</span>(<span class="kw">as.matrix</span>(counts)) <span class="co"># size in bytes</span></span></code></pre></div>
-<p>We see here that the sparse matrix takes 225 Mb in memory while storing the matrix in a dense format (where all count values including zeros are stored) takes almost 10 times as much memory! This memory saving is very important, especially as data sets are now being created that are beyond a million cells. These matrices can become unmanageable without special computing resources.</p>
-<p>In the sparse representation, we assume that the majority of count values in a matrix are zero. We only store the non-zero values. This is implemented in the Matrix package using a dgTMatrix object.</p>
-</div>
-</div>
-<div id="filtering-low-quality-cells" class="section level2">
-<h2>Filtering low-quality cells</h2>
-<p>You can learn a lot about your scRNA-seq data’s quality with simple plotting. Let’s do some plotting to look at the number of reads per cell, reads per genes, expressed genes per cell (often called complexity), and rarity of genes (cells expressing genes).</p>
-<div id="look-at-the-summary-counts-for-genes-and-cells" class="section level3">
-<h3>Look at the summary counts for genes and cells</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a>counts_per_cell &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(counts)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a>counts_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a>genes_per_cell &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(counts<span class="op">&gt;</span><span class="dv">0</span>) <span class="co"># count gene only if it has non-zero reads mapped.</span></span></code></pre></div>
-<p>Task: In a similar way, can you calculate cells per genes? replace the ‘?’ in the command below</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a>cells_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts<span class="op">&gt;</span><span class="dv">0</span>) <span class="co"># only count cells where the gene is expressed</span></span></code></pre></div>
-<p>colSums and rowSums are functions that work on each row or column in a matrix and return the column sums or row sums as a vector. If this is true counts_per_cell should have 1 entry per cell. Let’s make sure the length of the returned vector matches the matrix dimension for column. How would you do that? ( Hint:length() ).</p>
-<p>Notes: 1. Matrix::colSums is a way to force functions from the Matrix library to be used. There are many libraries that implement colSums, we are forcing the one from the Matrix library to be used here to make sure it handles the dgTmatrix (sparse matrix) correctly. This is good practice.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(counts_per_cell<span class="op">+</span><span class="dv">1</span>),<span class="dt">main=</span><span class="st">&#39;counts per cell&#39;</span>,<span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(genes_per_cell<span class="op">+</span><span class="dv">1</span>), <span class="dt">main=</span><span class="st">&#39;genes per cell&#39;</span>, <span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a><span class="kw">plot</span>(counts_per_cell, genes_per_cell, <span class="dt">log=</span><span class="st">&#39;xy&#39;</span>, <span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a><span class="kw">title</span>(<span class="st">&#39;counts vs genes per cell&#39;</span>)</span></code></pre></div>
-<p>Here we see examples of plotting a new plot, the histogram. R makes this really easy with the hist function. We are also transforming the values to log10 before plotting, this is done with the log10 method. When logging count data, the + 1 is used to avoid log10(0) which is not defined.</p>
-<p>Can you a histogram of counts per gene in log10 scale?</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(cells_per_gene<span class="op">+</span><span class="dv">1</span>), <span class="dt">main=</span><span class="st">&#39;counts per gene&#39;</span>, <span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span></code></pre></div>
-</div>
-<div id="plot-cells-ranked-by-their-number-of-detected-genes." class="section level3">
-<h3>Plot cells ranked by their number of detected genes.</h3>
-<p>Here we rank each cell by its library complexity, ie the number of genes detected per cell. This is a very useful plot as it shows the distribution of library complexity in the sequencing run. One can use this plot to investigate observations (potential cells) that are actually failed libraries (lower end outliers) or observations that are cell doublets (higher end outliers).</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="kw">plot</span>(<span class="kw">sort</span>(genes_per_cell), <span class="dt">xlab=</span><span class="st">&#39;cell&#39;</span>, <span class="dt">log=</span><span class="st">&#39;y&#39;</span>, <span class="dt">main=</span><span class="st">&#39;genes per cell (ordered)&#39;</span>)</span></code></pre></div>
-</div>
-</div>
-<div id="beginning-with-seurat-httpsurldefense.comv3__httpsatijalab.orgseurat__jfdnoqoxpb6uzw091njvxquxnzkhaubuwfap-w0lpkn3iqcrfg_wcz4dqvsqmo03swrirbrsjyzj0im_xlxzfnr" class="section level2">
-<h2>Beginning with Seurat: <a href="https://urldefense.com/v3/__http://satijalab.org/seurat/__" class="uri">https://urldefense.com/v3/__http://satijalab.org/seurat/__</a>;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_xlxzFnR$</h2>
-<div id="creating-a-seurat-object" class="section level3">
-<h3>Creating a Seurat object</h3>
-<p>To analyze our single cell data we will use a seurat object. Can you create an Seurat object with the 10x data and save it in an object called ‘seurat’? hint: CreateSeuratObject(). Can you include only genes that are are expressed in 3 or more cells and cells with complexity of 350 genes or more? How many genes are you left with? How many cells?</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">CreateSeuratObject</span>(<span class="dt">counts =</span> counts, <span class="dt">project =</span> <span class="st">&quot;10X_NSCLC&quot;</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a><span class="co"># Subset based on number of genes detected per cell.</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">subset</span>(seurat, <span class="dt">subset =</span> nFeature_RNA <span class="op">&gt;=</span><span class="st"> </span><span class="dv">350</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true"></a><span class="co"># Subset based on genes detected in 3 or more cells</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true"></a>cells_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts<span class="op">&gt;</span><span class="dv">0</span>) </span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true"></a>indices &lt;-<span class="st"> </span>cells_per_gene <span class="op">&gt;=</span><span class="st"> </span><span class="dv">3</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true"></a>features &lt;-<span class="st"> </span><span class="kw">rownames</span>(seurat)[indices]</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">subset</span>(seurat, <span class="dt">features =</span> features)</span></code></pre></div>
-<p>Almost all our analysis will be on the single object, of class Seurat. This object contains various “slots” (designated by <a href="mailto:seurat@slotname" class="email">seurat@slotname</a>) that will store not only the raw count data, but also the results from various computations below. This has the advantage that we do not need to keep track of inidividual variables of interest - they can all be collapsed into a single object as long as these slots are pre-defined.</p>
-<p>The Assay class stores single cell data. For typical scRNA-seq experiments, a Seurat object will have a single Assay (“RNA”). This assay will also store multiple ‘transformations’ of the data, including raw counts (<span class="citation">@counts</span> slot), normalized data (<span class="citation">@data</span> slot), and scaled data for dimensional reduction (<span class="citation">@scale.data</span> slot).</p>
-<p><code>seurat[[&quot;RNA&quot;]]</code> is a slot that stores the original gene count matrix. We can view the first 10 rows (genes) and the first 10 columns (cells).</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a>seurat[[<span class="st">&quot;RNA&quot;</span>]]<span class="op">@</span>counts[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span></code></pre></div>
-</div>
-</div>
-<div id="preprocessing-step-1-filter-out-low-quality-cells" class="section level2">
-<h2>Preprocessing step 1 : Filter out low-quality cells</h2>
-<p>The Seurat object initialization step above only considered cells that expressed at least 350 genes. Additionally, we would like to exclude cells that are damaged. A common metric to judge this (although by no means the only one) is the relative expression of mitochondrially derived genes. When the cells apoptose due to stress, their mitochondria becomes leaky and there is widespread RNA degradation. Thus a relative enrichment of mitochondrially derived genes can be a tell-tale sign of cell stress. Here, we compute the proportion of transcripts that are of mitochondrial origin for every cell (<code>percent.mito</code>), and visualize its distribution as a violin plot. We also use the <code>GenePlot</code> function to observe how <code>percent.mito</code> correlates with other metrics.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="co"># The number of genes and UMIs (nGene and nUMI) are automatically calculated</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a><span class="co"># for every object by Seurat.  For non-UMI data, nUMI represents the sum of</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a><span class="co"># the non-normalized values within a cell We calculate the percentage of</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a><span class="co"># mitochondrial genes here and store it in percent.mito using AddMetaData.</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true"></a><span class="co"># We use object@data since this represents non-transformed and</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true"></a><span class="co"># non-log-normalized counts The % of UMI mapping to MT-genes is a common</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true"></a><span class="co"># scRNA-seq QC metric.</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true"></a>mito.genes &lt;-<span class="st"> </span><span class="kw">grep</span>(<span class="dt">pattern =</span> <span class="st">&quot;^MT-&quot;</span>, <span class="dt">x =</span> <span class="kw">rownames</span>(seurat), <span class="dt">value =</span> <span class="ot">TRUE</span>)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true"></a>percent.mito &lt;-<span class="st"> </span><span class="dv">100</span><span class="op">*</span>Matrix<span class="op">::</span><span class="kw">colSums</span>(seurat[[<span class="st">&quot;RNA&quot;</span>]]<span class="op">@</span>data[mito.genes, ])<span class="op">/</span>Matrix<span class="op">::</span><span class="kw">colSums</span>(seurat[[<span class="st">&quot;RNA&quot;</span>]]<span class="op">@</span>data)</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true"></a></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true"></a><span class="co"># AddMetaData adds columns to object@meta.data, and is a great place to stash QC stats.</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true"></a><span class="co"># This also allows us to plot the metadata values using the Seurat&#39;s VlnPlot().</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true"></a><span class="kw">head</span>(seurat<span class="op">@</span>meta.data) <span class="co"># Before adding</span></span></code></pre></div>
-<p>Task: Can you add the percentage if mitochondrial genes to the seurat object meta data? If you dont remember the name of the parameter you can type ?AddMetaData in the console. An alternative way to add meta data is by using: seurat[[“percent.mito”]] &lt;- PercentageFeatureSet(seurat, pattern = “^MT-”)</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">AddMetaData</span>(<span class="dt">object =</span> seurat, <span class="dt">metadata =</span> percent.mito, <span class="dt">col.name =</span> <span class="st">&quot;percent.mito&quot;</span>)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a><span class="kw">head</span>(seurat<span class="op">@</span>meta.data) <span class="co"># After adding</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a><span class="kw">head</span>(seurat[[]])</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>, <span class="st">&quot;nCount_RNA&quot;</span>, <span class="st">&quot;percent.mito&quot;</span>))</span></code></pre></div>
-<p>Here we calculated the percent mitochondrial reads and added it to the Seurat object in the slot named meta.data. This allowed us to plot using the violin plot function provided by Seurat.</p>
-<p>A third metric we use is the number of house keeping genes expressed in a cell. These genes reflect commomn processes active in a cell and hence are a good global quality measure. They are also abundant and are usually steadliy expressed in cells, thus less sensitive to the high dropout.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="co"># Load the the list of house keeping genes</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="kw">paste0</span>(dirname, <span class="st">&quot;tirosh_house_keeping-1.txt&quot;</span>), <span class="dt">skip =</span> <span class="dv">2</span>)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">as.vector</span>(hkgenes<span class="op">$</span>V1)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true"></a><span class="co"># remove hkgenes that were not found</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true"></a>hkgenes.found &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">toupper</span>(<span class="kw">rownames</span>(seurat)) <span class="op">%in%</span><span class="st"> </span>hkgenes)</span></code></pre></div>
-<p>Task: 1. Sum the number of detected house keeping genes for each cell 2. Add this information as meta data to seurat 3. plot all metrics: “nGene”, “nUMI”, “percent.mito”,“n.exp.hkgenes” using VlnPlot</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a>n.expressed.hkgenes &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(seurat[[<span class="st">&quot;RNA&quot;</span>]]<span class="op">@</span>data[hkgenes.found, ] <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">AddMetaData</span>(<span class="dt">object =</span> seurat, <span class="dt">metadata =</span> n.expressed.hkgenes, <span class="dt">col.name =</span> <span class="st">&quot;n.exp.hkgenes&quot;</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>, <span class="st">&quot;nCount_RNA&quot;</span>, <span class="st">&quot;percent.mito&quot;</span>,<span class="st">&quot;n.exp.hkgenes&quot;</span>), <span class="dt">ncol =</span> <span class="dv">4</span>)</span></code></pre></div>
-<p>Is there a correlation between the measurements? For example, number of UMIs with number of genes? Can you plot the nGene vs nUMI? What is the correlation? Do you see a strange subpopulation? What do you think happened with these cells?</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="kw">FeatureScatter</span>(<span class="dt">object =</span> seurat, <span class="dt">feature1 =</span> <span class="st">&quot;nFeature_RNA&quot;</span>, <span class="dt">feature2 =</span> <span class="st">&quot;nCount_RNA&quot;</span>)</span></code></pre></div>
-</div>
-<div id="examine-contents-of-seurat-object" class="section level2">
-<h2>Examine contents of Seurat object</h2>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="kw">str</span>(seurat)</span></code></pre></div>
-<p>These are the slots in the Seurat object. Some of the slots are automatically updated by Seurat as you move through analysis. Take a moment to look through the information, knowing the slots allow you to leverage work Seurat has already done for you.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>), <span class="dt">group.by =</span> <span class="kw">c</span>(<span class="st">&#39;orig.ident&#39;</span>))</span></code></pre></div>
-<p>Here we plot the number of genes per cell by what Seurat calls orig.ident. Identity is a concept that is used in the Seurat object to refer to the cell identity. In this case, the cell identity is 10X_NSCLC, but after we cluster the cells, the cell identity will be whatever cluster the cell belongs to. We will see how identity updates as we go throught the analysis.</p>
-<p>Next, let’s filter the cells based on the quality control metrics. Filter based on: 1. nFeature_RNA 2. percent.mito 3. n.exp.hkgenes Task: Change the thresholds to what you think they should be according to the violin plots</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>,<span class="st">&quot;percent.mito&quot;</span>,<span class="st">&quot;n.exp.hkgenes&quot;</span>), <span class="dt">ncol =</span> <span class="dv">3</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">subset</span>(seurat, <span class="dt">subset =</span> nFeature_RNA <span class="op">&gt;</span><span class="st"> </span><span class="dv">350</span> <span class="op">&amp;</span><span class="st"> </span>nFeature_RNA <span class="op">&lt;</span><span class="st"> </span><span class="dv">4000</span> <span class="op">&amp;</span><span class="st"> </span>percent.mito <span class="op">&lt;</span><span class="st"> </span><span class="dv">15</span> <span class="op">&amp;</span><span class="st"> </span>n.exp.hkgenes <span class="op">&gt;</span><span class="st"> </span><span class="dv">55</span>)</span></code></pre></div>
-<p>How many cells are you left with?</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true"></a>seurat</span></code></pre></div>
-<div id="preprocessing-step-2-expression-normalization" class="section level3">
-<h3>Preprocessing step 2 : Expression normalization</h3>
-<p>After removing unwanted genes cells from the dataset, the next step is to normalize the data. By default, we employ a global-scaling normalization method “LogNormalize” that normalizes the gene expression measurements for each cell by the total expression, multiplies this by a scale factor (10,000 by default), and log-transforms the result. There have been many methods to normalize the data, but this is the simplest and the most intuitive. The division by total expression is done to change all expression counts to a relative measure, since experience has suggested that technical factors (e.g. capture rate, efficiency of reverse transcription) are largely responsible for the variation in the number of molecules per cell, although genuine biological factors (e.g. cell cycle stage, cell size) also play a smaller, but non-negligible role. The log-transformation is a commonly used transformation that has many desirable properties, such as variance stabilization (can you think of others?).</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">NormalizeData</span>(<span class="dt">object =</span> seurat, <span class="dt">normalization.method =</span> <span class="st">&quot;LogNormalize&quot;</span>, <span class="dt">scale.factor =</span> <span class="fl">1e4</span>)</span></code></pre></div>
-<p>Well there you have it! A filtered and normalized gene-expression data set. A great accomplishment for your first dive into scRNA-Seq analysis. Well done!</p>
+<div id="b.-read-in-pancreas-counts-matrix." class="section level3">
+<h3>1B. Read in Pancreas counts matrix.</h3>
+<p>We’ll focus on a human pancreas scRNAseq dataset. It is freely available from <a href="https://data.humancellatlas.org/explore/projects/962bd805-eb89-4c54-bad2-008e497d1307.">the HCA: link</a>. We start by downloading the cell, features and counts matrix.</p>
+<ul>
+<li>Get the downloadable links for each file</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="kw">download.file</span>(<span class="st">&#39;https://storage.googleapis.com/datarepo-acea73bc-bucket/93828852-eb46-4e85-8ba6-9309695b4455/dae1c628-47c9-42ca-85ad-94a16756e5fa/GSE114802_org4_barcodes.tsv?X-Goog-Algorithm=GOOG4-RSA-SHA256&amp;X-Goog-Credential=datarepo-jade-api%40terra-datarepo-production.iam.gserviceaccount.com%2F20220606%2Fauto%2Fstorage%2Fgoog4_request&amp;X-Goog-Date=20220606T190218Z&amp;X-Goog-Expires=900&amp;X-Goog-SignedHeaders=host&amp;X-Goog-Signature=c04e6acf07e12d6878cb4c39c0eb0571c85a40373abfc969b45bee9dc87e7399d72e8f26a922a5d16fd2129b7ebbd5f03ac9d7faa9d0dda9d959c8455c2291c8bc3eb88ac458482768194cee7542d00737985298b4b6a14a79be9fd2375ee70ca29e81ff107c64c21b44fa95d25a9d04e34d939856ec2c76ad613d44adcfe988bb7a5dd2509875e1a3b1c8d8c7d0ab3704d7efa8bb5944be3e2a3c753e200b21e6f845f29615128b531cec0661addf116949e89ed0dafd93f2bdcd045a33fbf73977f71303469e0b9c4c3a067b92ec4cb9b2e00b9d96f6341d834e3ee52197fcc265f070ee4b4e3d2310ae4c94a54f3ac58df543a5ae6002ebbf51ee8ff32dd7&#39;</span>, <span class="st">&#39;GSE114802_org4_barcodes.tsv&#39;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a><span class="kw">download.file</span>(<span class="st">&#39;https://storage.googleapis.com/datarepo-acea73bc-bucket/93828852-eb46-4e85-8ba6-9309695b4455/d1ecbc51-1dbd-449c-885c-b4eb0bb8e458/GSE114802_org4_genes.tsv?X-Goog-Algorithm=GOOG4-RSA-SHA256&amp;X-Goog-Credential=datarepo-jade-api%40terra-datarepo-production.iam.gserviceaccount.com%2F20220606%2Fauto%2Fstorage%2Fgoog4_request&amp;X-Goog-Date=20220606T190343Z&amp;X-Goog-Expires=900&amp;X-Goog-SignedHeaders=host&amp;X-Goog-Signature=be29b5d9336e093bb49e00928606adb554b73ab5ef273688bc18813783ad28ddde516ed02dba3fcb5e190db20605de05e1344b995cf3d9af8ab0dc10f6787a8a056b483b663f4b2288459c0efa39015987e1e9a797377a216914108736e81b179a4bb998ac0116384b26de4981f36d8e953ff91b6bbecba1bde112fcadbf80c1e00e5eed37c90bf7141df36333d0a8243d2790d87e27632c13d5261d5fd100fe5b262a80645f5b968c0df36db1346209afecc1044ba85a668dd643269402736d661e7a33b7ce695c1bca224de49997c1998d9da368378d9bc0550cfa0cd1368d5972d0b2c2eb738ac7347677850ac4fa60b11271f7fd9bcbee664b82da86d532&#39;</span>, <span class="st">&#39;GSE114802_org4_genes.tsv&#39;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a><span class="kw">download.file</span>(<span class="st">&#39;https://storage.googleapis.com/datarepo-acea73bc-bucket/93828852-eb46-4e85-8ba6-9309695b4455/56ffd5e4-0db3-4a6d-895c-6f0592090d79/GSE114802_org4_counts.csv?X-Goog-Algorithm=GOOG4-RSA-SHA256&amp;X-Goog-Credential=datarepo-jade-api%40terra-datarepo-production.iam.gserviceaccount.com%2F20220606%2Fauto%2Fstorage%2Fgoog4_request&amp;X-Goog-Date=20220606T190312Z&amp;X-Goog-Expires=900&amp;X-Goog-SignedHeaders=host&amp;X-Goog-Signature=bbbd47524d69cc928282f18119745ee02f47e4f9889b1ece91394188d30f711c4b0d3387b279333dacc652f57f6b1a419d487c9f2c83840e77561627829af78498f74cab5a1144feadedc80346bcb41e26bca0e1b5453f5bf6c7db57f564b5bb36e48f9e597a2aaffafc6aabb0127736530795b0bb814b2fe7cefa0adfb548da415c6bf09fd938391fc8c363b1b110e5755c382360d0f3c01591a6d3325afea057357106374b4856987cd0f9ca4af3a7c30667497927e6f8a46553a7091616d12ad708266630a0b4cd600f527cde7d7f1bf09ecce24e3ae832f86280765b737e7671f6f1f1e18fa0fbcfc15d089a21ca854378ec76faf1069a444f76464b6d64&#39;</span>, <span class="st">&#39;GSE114802_org4_counts.csv&#39;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Import each table in R</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a>cells &lt;-<span class="st"> </span><span class="kw">read_tsv</span>(<span class="st">&#39;GSE114802_org4_barcodes.tsv&#39;</span>, <span class="dt">col_names =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>genes &lt;-<span class="st"> </span><span class="kw">read_tsv</span>(<span class="st">&#39;GSE114802_org4_genes.tsv&#39;</span>, <span class="dt">col_names =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a>counts &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&#39;GSE114802_org4_counts.csv&#39;</span>, <span class="dt">col_names =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a>counts &lt;-<span class="st"> </span>counts[, <span class="dv">-1</span>]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a><span class="kw">rownames</span>(counts) &lt;-<span class="st"> </span>genes<span class="op">$</span>X1</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Transform into a <code>SingleCellExperiment</code> object</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a>sce &lt;-<span class="st"> </span><span class="kw">SingleCellExperiment</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>    <span class="dt">colData =</span> cells, </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>    <span class="dt">rowData =</span> genes, </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a>    <span class="dt">assays =</span> <span class="kw">list</span>(<span class="st">&#39;counts&#39;</span> =<span class="st"> </span>counts)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Examine the SingleCellExperiment object you’ve just created. Get an idea of the size of the dataset, the different data available, etc.</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="kw">colData</span>(sce)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a><span class="kw">rowData</span>(sce)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true"></a><span class="kw">metadata</span>(sce)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true"></a><span class="kw">dim</span>(sce)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true"></a><span class="kw">assays</span>(sce)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true"></a><span class="kw">counts</span>(sce)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true"></a><span class="kw">logcounts</span>(sce)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true"></a><span class="kw">reducedDims</span>(sce)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>How much memory does a sparse matrix take up relative to a dense matrix? (use <code>object.size()</code> to get the size of an object…)</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a>counts &lt;-<span class="st"> </span><span class="kw">counts</span>(sce)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a><span class="kw">object.size</span>(counts) <span class="co"># size in bytes</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a><span class="kw">object.size</span>(<span class="kw">as.matrix</span>(counts)) <span class="co"># size in bytes</span></span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Compare it to the sparsity of the counts (the % of the counts equal to 0)</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="kw">sum</span>(counts <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) <span class="op">/</span><span class="st"> </span>(<span class="kw">nrow</span>(sce)<span class="op">*</span><span class="kw">ncol</span>(sce))</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
 </div>
 </div>
-<div id="detection-of-variable-genes-across-the-single-cells" class="section level2">
-<h2>Detection of variable genes across the single cells</h2>
-<p>Seurat calculates highly variable genes and focuses on these for downstream analysis. <strong><code>FindVariableFeatures</code></strong> calculates the average expression and dispersion for each gene, places these genes into bins, and then calculates a z-score for dispersion within each bin. This helps control for the relationship between variability and average expression.</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">FindVariableFeatures</span>(seurat, <span class="dt">selection.method =</span> <span class="st">&quot;vst&quot;</span>, <span class="dt">nfeatures =</span> <span class="dv">2000</span>)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true"></a></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true"></a><span class="co"># Identify the 10 most highly variable genes</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true"></a>top10 &lt;-<span class="st"> </span><span class="kw">head</span>(<span class="kw">VariableFeatures</span>(seurat), <span class="dv">10</span>)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true"></a></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true"></a><span class="co"># plot variable features with and without labels</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true"></a>plot1 &lt;-<span class="st"> </span><span class="kw">VariableFeaturePlot</span>(seurat)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true"></a>plot2 &lt;-<span class="st"> </span><span class="kw">LabelPoints</span>(<span class="dt">plot =</span> plot1, <span class="dt">points =</span> top10, <span class="dt">repel =</span> <span class="ot">TRUE</span>, <span class="dt">xnudge =</span> <span class="dv">0</span>, <span class="dt">ynudge =</span> <span class="dv">0</span>)</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true"></a>plot1 <span class="op">+</span><span class="st"> </span>plot2</span></code></pre></div>
+<div id="basic-qcs" class="section level2">
+<h2>2. Basic QCs</h2>
+<p>You can learn a lot about your scRNA-seq data’s quality with simple plotting.<br />
+Let’s do some plotting to look at the number of reads per cell, reads per genes, expressed genes per cell (often called complexity), and rarity of genes (cells expressing genes).</p>
+<ul>
+<li>Look at the summary counts for genes and cells</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a>counts_per_cell &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(counts)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>counts_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a>genes_per_cell &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(counts <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) <span class="co"># count gene only if it has non-zero reads mapped.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(counts_per_cell<span class="op">+</span><span class="dv">1</span>), <span class="dt">main =</span> <span class="st">&#39;# of counts per cell&#39;</span>, <span class="dt">col =</span> <span class="st">&#39;wheat&#39;</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(genes_per_cell<span class="op">+</span><span class="dv">1</span>), <span class="dt">main =</span> <span class="st">&#39;# of expressed genes per cell&#39;</span>, <span class="dt">col =</span> <span class="st">&#39;wheat&#39;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a><span class="kw">plot</span>(counts_per_cell, genes_per_cell, <span class="dt">log =</span> <span class="st">&#39;xy&#39;</span>, <span class="dt">col =</span> <span class="st">&#39;wheat&#39;</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true"></a><span class="kw">title</span>(<span class="st">&#39;Counts vs genes per cell&#39;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Can you plot a histogram of counts per gene in log10 scale?</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a>cells_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) <span class="co"># only count cells where the gene is expressed</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(cells_per_gene<span class="op">+</span><span class="dv">1</span>), <span class="dt">main =</span> <span class="st">&#39;# of cells expressing each gene&#39;</span>, <span class="dt">col =</span> <span class="st">&#39;wheat&#39;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Plot cells ranked by their number of detected genes: rank each cell by its library complexity, ie the number of genes detected per cell.<br />
+This is a very useful plot as it shows the distribution of library complexity in the sequencing run.<br />
+One can use this plot to investigate observations (potential cells) that are actually failed libraries (lower end outliers) or observations that are cell doublets (higher end outliers).</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="kw">plot</span>(<span class="kw">rev</span>(<span class="kw">sort</span>(genes_per_cell)), <span class="dt">xlab =</span> <span class="st">&#39;cell&#39;</span>, <span class="dt">log =</span> <span class="st">&#39;y&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;# of counts per cell (ordered)&#39;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Several QCs can be automatically computed using <code>quickPerCellQC()</code>. Try it out and check the results. What are the <code>total</code> and <code>detected</code> columns?</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a>sce &lt;-<span class="st"> </span><span class="kw">quickPerCellQC</span>(sce)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a><span class="kw">colData</span>(sce)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
 </div>
-<div id="gene-set-expression-across-cells" class="section level2">
-<h2>Gene set expression across cells</h2>
-<p>Sometimes we want to ask what is the expression of a set of a genes across cells. This set of genes may make up a gene expression program we are interested in. Another benefit at looking at gene sets is it reduces the effects of drop outs.</p>
-<p>Below, we look at genes involved in: T cells, the cell cycle and the stress signature upon cell dissociation. We calculate these genes average expression levels on the single cell level, while controlling for technical effects.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true"></a><span class="co"># Read in a list of cell cycle markers, from Tirosh et al, 2015.</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true"></a><span class="co"># We can segregate this list into markers of G2/M phase and markers of S phase.</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true"></a>cc.genes &lt;-<span class="st"> </span><span class="kw">readLines</span>(<span class="kw">paste0</span>(dirname, <span class="st">&quot;regev_lab_cell_cycle_genes-1.txt&quot;</span>))</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true"></a>s.genes &lt;-<span class="st"> </span>cc.genes[<span class="dv">1</span><span class="op">:</span><span class="dv">43</span>]</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true"></a>g2m.genes &lt;-<span class="st"> </span>cc.genes[<span class="dv">44</span><span class="op">:</span><span class="dv">97</span>]</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">CellCycleScoring</span>(seurat, <span class="dt">s.features =</span> s.genes, <span class="dt">g2m.features =</span> g2m.genes, <span class="dt">set.ident =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
-<p>Task: Use markers for dissociation to calculate dissociation score</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true"></a><span class="co"># Genes upregulated during dissociation of tissue into single cells.</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true"></a>genes.dissoc &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ATF3&quot;</span>, <span class="st">&quot;BTG2&quot;</span>, <span class="st">&quot;CEBPB&quot;</span>, <span class="st">&quot;CEBPD&quot;</span>, <span class="st">&quot;CXCL3&quot;</span>, <span class="st">&quot;CXCL2&quot;</span>, <span class="st">&quot;CXCL1&quot;</span>, <span class="st">&quot;DNAJA1&quot;</span>, <span class="st">&quot;DNAJB1&quot;</span>, <span class="st">&quot;DUSP1&quot;</span>, <span class="st">&quot;EGR1&quot;</span>, <span class="st">&quot;FOS&quot;</span>, <span class="st">&quot;FOSB&quot;</span>, <span class="st">&quot;HSP90AA1&quot;</span>, <span class="st">&quot;HSP90AB1&quot;</span>, <span class="st">&quot;HSPA1A&quot;</span>, <span class="st">&quot;HSPA1B&quot;</span>, <span class="st">&quot;HSPA1A&quot;</span>, <span class="st">&quot;HSPA1B&quot;</span>, <span class="st">&quot;HSPA8&quot;</span>, <span class="st">&quot;HSPB1&quot;</span>, <span class="st">&quot;HSPE1&quot;</span>, <span class="st">&quot;HSPH1&quot;</span>, <span class="st">&quot;ID3&quot;</span>, <span class="st">&quot;IER2&quot;</span>, <span class="st">&quot;JUN&quot;</span>, <span class="st">&quot;JUNB&quot;</span>, <span class="st">&quot;JUND&quot;</span>, <span class="st">&quot;MT1X&quot;</span>, <span class="st">&quot;NFKBIA&quot;</span>, <span class="st">&quot;NR4A1&quot;</span>, <span class="st">&quot;PPP1R15A&quot;</span>, <span class="st">&quot;SOCS3&quot;</span>, <span class="st">&quot;ZFP36&quot;</span>)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true"></a><span class="co">#### seurat &lt;- AddModuleScore(?, genes.list = list(?), ctrl.size = 20, name = &quot;genes_dissoc&quot;)</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">AddModuleScore</span>(seurat, <span class="dt">features =</span> <span class="kw">list</span>(genes.dissoc), <span class="dt">ctrl.size =</span> <span class="dv">20</span>, <span class="dt">name =</span> <span class="st">&quot;genes_dissoc&quot;</span>)</span></code></pre></div>
-<p>Task: Plot the correlation between number of genes and S score. How do we know the name of these scores in the seurat meta data?</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true"></a><span class="kw">FeatureScatter</span>(seurat, <span class="dt">feature1 =</span> ?, <span class="st">&quot;nFeature_RNA&quot;</span>)</span></code></pre></div>
-<p>Congratulations! You can identify and visualize cell subsets and the marker genes that describe these cell subsets. This is a very powerful analysis pattern often seen in publications. Well done!</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true"></a><span class="kw">library</span>(Seurat)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true"></a><span class="kw">library</span>(dplyr)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true"></a><span class="kw">library</span>(Matrix)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true"></a><span class="kw">library</span>(gdata)</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true"></a></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true"></a><span class="co"># read data</span></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true"></a>dirname &lt;-<span class="st"> &quot;~/Share/&quot;</span></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true"></a>counts_matrix_filename =<span class="st"> </span><span class="kw">paste0</span>(dirname,<span class="st">&quot;/GRCh38/&quot;</span>)</span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true"></a>counts &lt;-<span class="st"> </span><span class="kw">Read10X</span>(<span class="dt">data.dir =</span> counts_matrix_filename)  <span class="co"># Seurat function to read in 10x count data</span></span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true"></a></span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true"></a><span class="co"># To minimize memory use on the docker - choose only the first 1000 cells</span></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true"></a>counts &lt;-<span class="st"> </span>counts[,<span class="dv">1</span><span class="op">:</span><span class="dv">1000</span>]</span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true"></a></span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true"></a><span class="co"># Let&#39;s examine the sparse counts matrix</span></span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true"></a>counts[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>]</span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true"></a></span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true"></a><span class="co"># How big is the matrix?</span></span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true"></a><span class="kw">dim</span>(counts) <span class="co"># report number of genes (rows) and number of cells (columns)</span></span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true"></a></span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true"></a><span class="co"># How much memory does a sparse matrix take up relative to a dense matrix?</span></span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true"></a><span class="kw">object.size</span>(counts) <span class="co"># size in bytes</span></span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true"></a><span class="kw">object.size</span>(<span class="kw">as.matrix</span>(counts)) <span class="co"># size in bytes</span></span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true"></a></span>
-<span id="cb28-24"><a href="#cb28-24" aria-hidden="true"></a><span class="co"># Look at the summary counts for genes and cells</span></span>
-<span id="cb28-25"><a href="#cb28-25" aria-hidden="true"></a>counts_per_cell &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(counts)</span>
-<span id="cb28-26"><a href="#cb28-26" aria-hidden="true"></a>counts_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts)</span>
-<span id="cb28-27"><a href="#cb28-27" aria-hidden="true"></a>genes_per_cell &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(counts<span class="op">&gt;</span><span class="dv">0</span>) <span class="co"># count gene only if it has non-zero reads mapped.</span></span>
-<span id="cb28-28"><a href="#cb28-28" aria-hidden="true"></a>cells_per_gene &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">rowSums</span>(counts<span class="op">&gt;</span><span class="dv">0</span>) <span class="co"># only count cells where the gene is expressed</span></span>
-<span id="cb28-29"><a href="#cb28-29" aria-hidden="true"></a></span>
-<span id="cb28-30"><a href="#cb28-30" aria-hidden="true"></a><span class="co"># plot counts and genes</span></span>
-<span id="cb28-31"><a href="#cb28-31" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(counts_per_cell<span class="op">+</span><span class="dv">1</span>),<span class="dt">main=</span><span class="st">&#39;counts per cell&#39;</span>,<span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb28-32"><a href="#cb28-32" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(genes_per_cell<span class="op">+</span><span class="dv">1</span>), <span class="dt">main=</span><span class="st">&#39;genes per cell&#39;</span>, <span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb28-33"><a href="#cb28-33" aria-hidden="true"></a><span class="kw">plot</span>(counts_per_cell, genes_per_cell, <span class="dt">log=</span><span class="st">&#39;xy&#39;</span>, <span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb28-34"><a href="#cb28-34" aria-hidden="true"></a><span class="kw">title</span>(<span class="st">&#39;counts vs genes per cell&#39;</span>)</span>
-<span id="cb28-35"><a href="#cb28-35" aria-hidden="true"></a></span>
-<span id="cb28-36"><a href="#cb28-36" aria-hidden="true"></a><span class="co"># plot a histogram of counts per gene in log10 scale</span></span>
-<span id="cb28-37"><a href="#cb28-37" aria-hidden="true"></a><span class="kw">hist</span>(<span class="kw">log10</span>(counts_per_gene<span class="op">+</span><span class="dv">1</span>), <span class="dt">main=</span><span class="st">&#39;counts per gene&#39;</span>, <span class="dt">col=</span><span class="st">&#39;wheat&#39;</span>)</span>
-<span id="cb28-38"><a href="#cb28-38" aria-hidden="true"></a></span>
-<span id="cb28-39"><a href="#cb28-39" aria-hidden="true"></a><span class="co"># Plot cells ranked by their number of detected genes.</span></span>
-<span id="cb28-40"><a href="#cb28-40" aria-hidden="true"></a><span class="kw">plot</span>(<span class="kw">sort</span>(genes_per_cell), <span class="dt">xlab=</span><span class="st">&#39;cell&#39;</span>, <span class="dt">log=</span><span class="st">&#39;y&#39;</span>, <span class="dt">main=</span><span class="st">&#39;genes per cell (ordered)&#39;</span>)</span>
-<span id="cb28-41"><a href="#cb28-41" aria-hidden="true"></a></span>
-<span id="cb28-42"><a href="#cb28-42" aria-hidden="true"></a><span class="co">## Beginning with Seurat: https://urldefense.com/v3/__http://satijalab.org/seurat/__;!!JFdNOqOXpB6UZW0!91NjvXQUxNZkHAubUwFap-W0lPkN3IQcRFg_Wcz4dqVsQmO03sWRiRbrSjYzj0IM_xlxzFnR$ </span></span>
-<span id="cb28-43"><a href="#cb28-43" aria-hidden="true"></a></span>
-<span id="cb28-44"><a href="#cb28-44" aria-hidden="true"></a><span class="co"># create object</span></span>
-<span id="cb28-45"><a href="#cb28-45" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">CreateSeuratObject</span>(<span class="dt">counts =</span> counts, <span class="dt">project =</span> <span class="st">&quot;10X_NSCLC&quot;</span>)</span>
-<span id="cb28-46"><a href="#cb28-46" aria-hidden="true"></a></span>
-<span id="cb28-47"><a href="#cb28-47" aria-hidden="true"></a><span class="co"># calculate percent of mitochondria genes</span></span>
-<span id="cb28-48"><a href="#cb28-48" aria-hidden="true"></a>seurat[[<span class="st">&quot;percent.mito&quot;</span>]] &lt;-<span class="st"> </span><span class="kw">PercentageFeatureSet</span>(seurat, <span class="dt">pattern =</span> <span class="st">&quot;^MT-&quot;</span>)</span>
-<span id="cb28-49"><a href="#cb28-49" aria-hidden="true"></a><span class="kw">head</span>(seurat<span class="op">@</span>meta.data) <span class="co"># After adding</span></span>
-<span id="cb28-50"><a href="#cb28-50" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>, <span class="st">&quot;nCount_RNA&quot;</span>, <span class="st">&quot;percent.mito&quot;</span>))</span>
-<span id="cb28-51"><a href="#cb28-51" aria-hidden="true"></a></span>
-<span id="cb28-52"><a href="#cb28-52" aria-hidden="true"></a><span class="co"># Load the the list of house keeping genes</span></span>
-<span id="cb28-53"><a href="#cb28-53" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="kw">paste0</span>(dirname, <span class="st">&quot;tirosh_house_keeping.txt&quot;</span>), <span class="dt">skip =</span> <span class="dv">2</span>)</span>
-<span id="cb28-54"><a href="#cb28-54" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">as.vector</span>(hkgenes<span class="op">$</span>V1)</span>
-<span id="cb28-55"><a href="#cb28-55" aria-hidden="true"></a></span>
-<span id="cb28-56"><a href="#cb28-56" aria-hidden="true"></a><span class="co"># remove hkgenes that were not found</span></span>
-<span id="cb28-57"><a href="#cb28-57" aria-hidden="true"></a>hkgenes.found &lt;-<span class="st"> </span><span class="kw">which</span>(<span class="kw">toupper</span>(<span class="kw">rownames</span>(seurat)) <span class="op">%in%</span><span class="st"> </span>hkgenes)</span>
-<span id="cb28-58"><a href="#cb28-58" aria-hidden="true"></a></span>
-<span id="cb28-59"><a href="#cb28-59" aria-hidden="true"></a><span class="co"># Add_number_of_house_keeping_genes</span></span>
-<span id="cb28-60"><a href="#cb28-60" aria-hidden="true"></a>n.expressed.hkgenes &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(seurat[[<span class="st">&quot;RNA&quot;</span>]]<span class="op">@</span>data[hkgenes.found, ] <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span>
-<span id="cb28-61"><a href="#cb28-61" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">AddMetaData</span>(<span class="dt">object =</span> seurat, <span class="dt">metadata =</span> n.expressed.hkgenes, <span class="dt">col.name =</span> <span class="st">&quot;n.exp.hkgenes&quot;</span>)</span>
-<span id="cb28-62"><a href="#cb28-62" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>, <span class="st">&quot;nCount_RNA&quot;</span>, <span class="st">&quot;percent.mito&quot;</span>,<span class="st">&quot;n.exp.hkgenes&quot;</span>), <span class="dt">ncol =</span> <span class="dv">4</span>)</span>
-<span id="cb28-63"><a href="#cb28-63" aria-hidden="true"></a></span>
-<span id="cb28-64"><a href="#cb28-64" aria-hidden="true"></a><span class="kw">FeatureScatter</span>(<span class="dt">object =</span> seurat, <span class="dt">feature1 =</span> <span class="st">&quot;nFeature_RNA&quot;</span>, <span class="dt">feature2 =</span> <span class="st">&quot;nCount_RNA&quot;</span>)</span>
-<span id="cb28-65"><a href="#cb28-65" aria-hidden="true"></a></span>
-<span id="cb28-66"><a href="#cb28-66" aria-hidden="true"></a><span class="co"># plot seurat meta data</span></span>
-<span id="cb28-67"><a href="#cb28-67" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>), <span class="dt">group.by =</span> <span class="kw">c</span>(<span class="st">&#39;orig.ident&#39;</span>))</span>
-<span id="cb28-68"><a href="#cb28-68" aria-hidden="true"></a></span>
-<span id="cb28-69"><a href="#cb28-69" aria-hidden="true"></a><span class="kw">VlnPlot</span>(<span class="dt">object =</span> seurat, <span class="dt">features =</span> <span class="kw">c</span>(<span class="st">&quot;nFeature_RNA&quot;</span>,<span class="st">&quot;percent.mito&quot;</span>,<span class="st">&quot;n.exp.hkgenes&quot;</span>), <span class="dt">ncol =</span> <span class="dv">3</span>)</span>
-<span id="cb28-70"><a href="#cb28-70" aria-hidden="true"></a></span>
-<span id="cb28-71"><a href="#cb28-71" aria-hidden="true"></a><span class="co"># filter data</span></span>
-<span id="cb28-72"><a href="#cb28-72" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">subset</span>(seurat, <span class="dt">subset =</span> nFeature_RNA <span class="op">&gt;</span><span class="st"> </span><span class="dv">350</span> <span class="op">&amp;</span><span class="st"> </span>nFeature_RNA <span class="op">&lt;</span><span class="st"> </span><span class="dv">4000</span> <span class="op">&amp;</span><span class="st"> </span>percent.mito <span class="op">&lt;</span><span class="st"> </span><span class="dv">15</span> <span class="op">&amp;</span><span class="st"> </span>n.exp.hkgenes <span class="op">&gt;</span><span class="st"> </span><span class="dv">55</span>)</span>
-<span id="cb28-73"><a href="#cb28-73" aria-hidden="true"></a></span>
-<span id="cb28-74"><a href="#cb28-74" aria-hidden="true"></a><span class="co">#normalize</span></span>
-<span id="cb28-75"><a href="#cb28-75" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">NormalizeData</span>(<span class="dt">object =</span> seurat, <span class="dt">normalization.method =</span> <span class="st">&quot;LogNormalize&quot;</span>, <span class="dt">scale.factor =</span> <span class="fl">1e4</span>)</span>
-<span id="cb28-76"><a href="#cb28-76" aria-hidden="true"></a></span>
-<span id="cb28-77"><a href="#cb28-77" aria-hidden="true"></a><span class="co">#find_var_genes</span></span>
-<span id="cb28-78"><a href="#cb28-78" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">FindVariableFeatures</span>(seurat, <span class="dt">selection.method =</span> <span class="st">&quot;vst&quot;</span>, <span class="dt">nfeatures =</span> <span class="dv">2000</span>)</span>
-<span id="cb28-79"><a href="#cb28-79" aria-hidden="true"></a></span>
-<span id="cb28-80"><a href="#cb28-80" aria-hidden="true"></a><span class="co"># Identify the 10 most highly variable genes</span></span>
-<span id="cb28-81"><a href="#cb28-81" aria-hidden="true"></a>top10 &lt;-<span class="st"> </span><span class="kw">head</span>(<span class="kw">VariableFeatures</span>(seurat), <span class="dv">10</span>)</span>
-<span id="cb28-82"><a href="#cb28-82" aria-hidden="true"></a></span>
-<span id="cb28-83"><a href="#cb28-83" aria-hidden="true"></a><span class="co"># plot variable features with and without labels</span></span>
-<span id="cb28-84"><a href="#cb28-84" aria-hidden="true"></a>plot1 &lt;-<span class="st"> </span><span class="kw">VariableFeaturePlot</span>(seurat)</span>
-<span id="cb28-85"><a href="#cb28-85" aria-hidden="true"></a>plot2 &lt;-<span class="st"> </span><span class="kw">LabelPoints</span>(<span class="dt">plot =</span> plot1, <span class="dt">points =</span> top10, <span class="dt">repel =</span> <span class="ot">TRUE</span>, <span class="dt">xnudge =</span> <span class="dv">0</span>, <span class="dt">ynudge =</span> <span class="dv">0</span>)</span>
-<span id="cb28-86"><a href="#cb28-86" aria-hidden="true"></a>plot1 <span class="op">+</span><span class="st"> </span>plot2</span>
-<span id="cb28-87"><a href="#cb28-87" aria-hidden="true"></a></span>
-<span id="cb28-88"><a href="#cb28-88" aria-hidden="true"></a><span class="co">#cell_cycle_genes</span></span>
-<span id="cb28-89"><a href="#cb28-89" aria-hidden="true"></a><span class="co"># Read in a list of cell cycle markers, from Tirosh et al, 2015.</span></span>
-<span id="cb28-90"><a href="#cb28-90" aria-hidden="true"></a><span class="co"># We can segregate this list into markers of G2/M phase and markers of S phase.</span></span>
-<span id="cb28-91"><a href="#cb28-91" aria-hidden="true"></a>cc.genes &lt;-<span class="st"> </span><span class="kw">readLines</span>(<span class="kw">paste0</span>(dirname, <span class="st">&quot;regev_lab_cell_cycle_genes.txt&quot;</span>))</span>
-<span id="cb28-92"><a href="#cb28-92" aria-hidden="true"></a>s.genes &lt;-<span class="st"> </span>cc.genes[<span class="dv">1</span><span class="op">:</span><span class="dv">43</span>]</span>
-<span id="cb28-93"><a href="#cb28-93" aria-hidden="true"></a>g2m.genes &lt;-<span class="st"> </span>cc.genes[<span class="dv">44</span><span class="op">:</span><span class="dv">97</span>]</span>
-<span id="cb28-94"><a href="#cb28-94" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">CellCycleScoring</span>(seurat, <span class="dt">s.features =</span> s.genes, <span class="dt">g2m.features =</span> g2m.genes, <span class="dt">set.ident =</span> <span class="ot">TRUE</span>)</span>
-<span id="cb28-95"><a href="#cb28-95" aria-hidden="true"></a></span>
-<span id="cb28-96"><a href="#cb28-96" aria-hidden="true"></a><span class="co">#dissociation_signature</span></span>
-<span id="cb28-97"><a href="#cb28-97" aria-hidden="true"></a><span class="co"># Genes upregulated during dissociation of tissue into single cells.</span></span>
-<span id="cb28-98"><a href="#cb28-98" aria-hidden="true"></a>genes.dissoc &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ATF3&quot;</span>, <span class="st">&quot;BTG2&quot;</span>, <span class="st">&quot;CEBPB&quot;</span>, <span class="st">&quot;CEBPD&quot;</span>, <span class="st">&quot;CXCL3&quot;</span>, <span class="st">&quot;CXCL2&quot;</span>, <span class="st">&quot;CXCL1&quot;</span>, <span class="st">&quot;DNAJA1&quot;</span>, <span class="st">&quot;DNAJB1&quot;</span>, <span class="st">&quot;DUSP1&quot;</span>, <span class="st">&quot;EGR1&quot;</span>, <span class="st">&quot;FOS&quot;</span>, <span class="st">&quot;FOSB&quot;</span>, <span class="st">&quot;HSP90AA1&quot;</span>, <span class="st">&quot;HSP90AB1&quot;</span>, <span class="st">&quot;HSPA1A&quot;</span>, <span class="st">&quot;HSPA1B&quot;</span>, <span class="st">&quot;HSPA1A&quot;</span>, <span class="st">&quot;HSPA1B&quot;</span>, <span class="st">&quot;HSPA8&quot;</span>, <span class="st">&quot;HSPB1&quot;</span>, <span class="st">&quot;HSPE1&quot;</span>, <span class="st">&quot;HSPH1&quot;</span>, <span class="st">&quot;ID3&quot;</span>, <span class="st">&quot;IER2&quot;</span>, <span class="st">&quot;JUN&quot;</span>, <span class="st">&quot;JUNB&quot;</span>, <span class="st">&quot;JUND&quot;</span>, <span class="st">&quot;MT1X&quot;</span>, <span class="st">&quot;NFKBIA&quot;</span>, <span class="st">&quot;NR4A1&quot;</span>, <span class="st">&quot;PPP1R15A&quot;</span>, <span class="st">&quot;SOCS3&quot;</span>, <span class="st">&quot;ZFP36&quot;</span>)</span>
-<span id="cb28-99"><a href="#cb28-99" aria-hidden="true"></a>seurat &lt;-<span class="st"> </span><span class="kw">AddModuleScore</span>(seurat, <span class="dt">features =</span> <span class="kw">list</span>(genes.dissoc), <span class="dt">ctrl.size =</span> <span class="dv">20</span>, <span class="dt">name =</span> <span class="st">&quot;genes_dissoc&quot;</span>)</span>
-<span id="cb28-100"><a href="#cb28-100" aria-hidden="true"></a></span>
-<span id="cb28-101"><a href="#cb28-101" aria-hidden="true"></a><span class="co"># correlation: cell cycle scoores and number of genes, eval = FALSE} </span></span>
-<span id="cb28-102"><a href="#cb28-102" aria-hidden="true"></a><span class="kw">FeatureScatter</span>(seurat, <span class="dt">feature1 =</span> <span class="st">&quot;S.Score&quot;</span>, <span class="st">&quot;nFeature_RNA&quot;</span>)</span></code></pre></div>
+<div id="access-to-stored-informations" class="section level2">
+<h2>3. Access to stored informations</h2>
+<div id="a.-assay-slots" class="section level3">
+<h3>3A. Assay slots</h3>
+<p>For typical scRNA-seq experiments, a <code>SingleCellExperiment</code> can have multiple assays, corresponding to different metrics. The most basic one is <code>counts</code>.<br />
+Different assays store different ‘transformations’ of the <code>counts</code>(e.g. `logcounts).</p>
+<ul>
+<li>Try to manually compute logcounts from counts and store it in a new slot</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="kw">assay</span>(sce, <span class="st">&#39;logcounts&#39;</span>) &lt;-<span class="st"> </span><span class="kw">log10</span>(<span class="kw">counts</span>(sce) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+</div>
+<div id="b.-embeddings" class="section level3">
+<h3>3B. Embeddings</h3>
+<p>Embeddings allow for a representation of large-scale data (N cells x M genes) into smaller dimensions (e.g. 2-50 dimensions). Typical embeddings can be PCA, t-SNE, UMAP, etc… Many embeddings can be computed using <code>run...()</code> functions from Bioconductor packages (e.g. <code>scran</code>, <code>scater</code>, …).</p>
+<ul>
+<li>Compute PCA embedding of the dataset using <code>runPCA()</code> from <code>scater</code> package</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a>sce &lt;-<span class="st"> </span>scater<span class="op">::</span><span class="kw">runPCA</span>(sce)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a><span class="kw">plotReducedDim</span>(sce, <span class="st">&quot;PCA&quot;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Compute t-SNE embedding of the dataset using <code>runTSNE()</code> from <code>scater</code> package</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a>sce &lt;-<span class="st"> </span>scater<span class="op">::</span><span class="kw">runTSNE</span>(sce)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a><span class="kw">plotReducedDim</span>(sce, <span class="st">&quot;TSNE&quot;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Compute UMAP embedding of the dataset using <code>runUMAP()</code> from <code>scater</code> package</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a>sce &lt;-<span class="st"> </span>scater<span class="op">::</span><span class="kw">runUMAP</span>(sce)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a><span class="kw">plotReducedDim</span>(sce, <span class="st">&quot;UMAP&quot;</span>, <span class="dt">colour_by =</span> <span class="st">&#39;sum&#39;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true"></a><span class="kw">plotReducedDim</span>(sce, <span class="st">&quot;UMAP&quot;</span>, <span class="dt">colour_by =</span> <span class="st">&#39;detected&#39;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+</div>
+<div id="c.-multiple-modalities" class="section level3">
+<h3>3C. Multiple modalities</h3>
+<p>Alternative ‘modalities’ can be stored in the same <code>SingleCellExperiment</code> object (e.g. if you perform paired single-cell RNA-seq and ATAC-seq). This is done through <code>altExps</code> which can store summarized experiments.</p>
+<ul>
+<li>Try to add an altExp (using <code>altExp&lt;-</code> function)</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="kw">altExp</span>(sce, <span class="st">&quot;ATAC_counts&quot;</span>) &lt;-<span class="st"> </span><span class="kw">SummarizedExperiment</span>(<span class="kw">matrix</span>(<span class="kw">rpois</span>(<span class="dv">1000</span>, <span class="dv">5</span>), <span class="dt">ncol =</span> <span class="kw">ncol</span>(sce)))</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a><span class="kw">swapAltExp</span>(sce, <span class="st">&quot;ATAC_counts&quot;</span>, <span class="dt">saved =</span> <span class="st">&quot;RNA_counts&quot;</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<p>Note that features can be different between different altExps.</p>
+</div>
+</div>
+<div id="filtering-cells-and-features" class="section level2">
+<h2>4. Filtering cells and features</h2>
+<div id="a.-pre-filtering" class="section level3">
+<h3>4A. Pre-filtering</h3>
+<ul>
+<li>Filter the SCE to only include (1) cells that have a complexity of 2000 genes or more and (2) genes that are are expressed in 10 or more cells.</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a>sce_filtered &lt;-<span class="st"> </span>sce[cells_per_gene <span class="op">&gt;</span><span class="st"> </span><span class="dv">10</span>, genes_per_cell <span class="op">&gt;</span><span class="st"> </span><span class="dv">2000</span>]</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<p>Almost all our analysis will be on this single object, of class SingleCellExperiment. This object contains various “slots” that will store not only the raw count data, but also the results from various computations below. This has the advantage that we do not need to keep track of inidividual variables of interest - they can all be collapsed into a single object as long as these slots are pre-defined.</p>
+</div>
+<div id="a.-filtering-low-quality-cells-mitochondrial-counts" class="section level3">
+<h3>4A. Filtering low-quality cells: mitochondrial counts</h3>
+<p>For each cell, we can calculate the percentage of counts mapping on mitochondrial genes and store it in a column <code>percent_mito</code> in our <code>colData()</code>.</p>
+<ul>
+<li>Find mitochondrial genes, compute the % of total counts associated with these genes, and store it in <code>colData</code></li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="kw">rowData</span>(sce_filtered)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a>mito_genes &lt;-<span class="st"> </span><span class="kw">rownames</span>(sce_filtered)[<span class="kw">grep</span>(<span class="dt">pattern =</span> <span class="st">&quot;^MT-&quot;</span>, <span class="dt">x =</span> <span class="kw">rowData</span>(sce_filtered)<span class="op">$</span>X2)]</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true"></a>mito_genes_counts &lt;-<span class="st"> </span><span class="kw">counts</span>(sce_filtered)[mito_genes, ]</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true"></a>percent_mito &lt;-<span class="st"> </span><span class="kw">colSums</span>(mito_genes_counts) <span class="op">/</span><span class="st"> </span>sce_filtered<span class="op">$</span>total</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true"></a><span class="kw">hist</span>(percent_mito<span class="op">*</span><span class="dv">100</span>, <span class="dt">main =</span> <span class="st">&#39;% of total counts over mitochondrial genes&#39;</span>, <span class="dt">col =</span> <span class="st">&#39;wheat&#39;</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true"></a><span class="kw">colData</span>(sce_filtered)<span class="op">$</span>percent_mito &lt;-<span class="st"> </span>percent_mito</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Remove cells with a % of mitochondrial counts greater than 10%.</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a>sce_filtered &lt;-<span class="st"> </span>sce_filtered[, sce_filtered<span class="op">$</span>percent_mito <span class="op">&lt;=</span><span class="st"> </span><span class="fl">0.10</span>]</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+</div>
+<div id="b.-checking-housekeeping-genes" class="section level3">
+<h3>4B. Checking housekeeping genes</h3>
+<p>Another metric we use is the number of house keeping genes expressed in a cell. These genes reflect commomn processes active in a cell and hence are a good global quality measure. They are also abundant and are usually steadliy expressed in cells, thus less sensitive to the high dropout.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="co"># Load the list of housekeeping genes</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="st">&quot;Share/tirosh_house_keeping.txt&quot;</span>, <span class="dt">skip =</span> <span class="dv">2</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">as.vector</span>(hkgenes<span class="op">$</span>V1)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span><span class="kw">rownames</span>(sce_filtered)[<span class="kw">match</span>(hkgenes, <span class="kw">rowData</span>(sce_filtered)<span class="op">$</span>X2)]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true"></a>hkgenes &lt;-<span class="st"> </span>hkgenes[<span class="op">!</span><span class="kw">is.na</span>(hkgenes)]</span></code></pre></div>
+<ul>
+<li>Compute the number of detected HK genes for each cell and store it in <code>colData</code></li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true"></a><span class="kw">colData</span>(sce_filtered)<span class="op">$</span>n_expressed_hkgenes &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(<span class="kw">counts</span>(sce_filtered)[hkgenes, ] <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Plot (in a boxplot) the relationship between the # of detected housekeeping genes and the total UMI count (or # of detected genes) per cell. Comment</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true"></a><span class="kw">colData</span>(sce_filtered)<span class="op">$</span>n_expressed_hkgenes &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">colSums</span>(<span class="kw">counts</span>(sce_filtered)[hkgenes, ] <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true"></a><span class="kw">boxplot</span>(<span class="kw">colData</span>(sce_filtered)<span class="op">$</span>total <span class="op">~</span><span class="st"> </span><span class="kw">colData</span>(sce_filtered)<span class="op">$</span>n_expressed_hkgenes)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true"></a><span class="kw">boxplot</span>(<span class="kw">colData</span>(sce_filtered)<span class="op">$</span>detected <span class="op">~</span><span class="st"> </span><span class="kw">colData</span>(sce_filtered)<span class="op">$</span>n_expressed_hkgenes)</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Remove cells with a # of expressed housekeeping genes greater than 85</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true"></a>sce_filtered &lt;-<span class="st"> </span>sce_filtered[, sce_filtered<span class="op">$</span>n_expressed_hkgenes <span class="op">&lt;=</span><span class="st"> </span><span class="dv">85</span>]</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+</div>
+<div id="c.-checking-gene-set-expression" class="section level3">
+<h3>4C. Checking gene set expression</h3>
+<p>Sometimes we want to ask what is the expression of a gene / a set of a genes across cells. This set of genes may make up a gene expression program we are interested in. Another benefit at looking at gene sets is it reduces the effects of drop outs.</p>
+<p>Let’s look at genes involved in the stress signature upon cell dissociation. We calculate these genes average expression levels on the single cell level.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true"></a>genes_dissoc &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ATF3&quot;</span>, <span class="st">&quot;BTG2&quot;</span>, <span class="st">&quot;CEBPB&quot;</span>, <span class="st">&quot;CEBPD&quot;</span>, <span class="st">&quot;CXCL3&quot;</span>, <span class="st">&quot;CXCL2&quot;</span>, <span class="st">&quot;CXCL1&quot;</span>, <span class="st">&quot;DNAJA1&quot;</span>, <span class="st">&quot;DNAJB1&quot;</span>, <span class="st">&quot;DUSP1&quot;</span>, <span class="st">&quot;EGR1&quot;</span>, <span class="st">&quot;FOS&quot;</span>, <span class="st">&quot;FOSB&quot;</span>, <span class="st">&quot;HSP90AA1&quot;</span>, <span class="st">&quot;HSP90AB1&quot;</span>, <span class="st">&quot;HSPA1A&quot;</span>, <span class="st">&quot;HSPA1B&quot;</span>, <span class="st">&quot;HSPA1A&quot;</span>, <span class="st">&quot;HSPA1B&quot;</span>, <span class="st">&quot;HSPA8&quot;</span>, <span class="st">&quot;HSPB1&quot;</span>, <span class="st">&quot;HSPE1&quot;</span>, <span class="st">&quot;HSPH1&quot;</span>, <span class="st">&quot;ID3&quot;</span>, <span class="st">&quot;IER2&quot;</span>, <span class="st">&quot;JUN&quot;</span>, <span class="st">&quot;JUNB&quot;</span>, <span class="st">&quot;JUND&quot;</span>, <span class="st">&quot;MT1X&quot;</span>, <span class="st">&quot;NFKBIA&quot;</span>, <span class="st">&quot;NR4A1&quot;</span>, <span class="st">&quot;PPP1R15A&quot;</span>, <span class="st">&quot;SOCS3&quot;</span>, <span class="st">&quot;ZFP36&quot;</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true"></a>genes_dissoc &lt;-<span class="st"> </span><span class="kw">rownames</span>(sce_filtered)[<span class="kw">match</span>(genes_dissoc, <span class="kw">rowData</span>(sce_filtered)<span class="op">$</span>X2)]</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true"></a>genes_dissoc &lt;-<span class="st"> </span><span class="kw">unique</span>(genes_dissoc[<span class="op">!</span><span class="kw">is.na</span>(genes_dissoc)])</span></code></pre></div>
+<ul>
+<li>Calculate the average gene set expression for each cell</li>
+</ul>
+<details>
+<summary>
+Show code
+</summary>
+<p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true"></a>ave_expr_genes_dissoc &lt;-<span class="st"> </span><span class="kw">colMeans</span>(<span class="kw">logcounts</span>(sce_filtered[genes_dissoc, ]))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true"></a><span class="kw">colData</span>(sce_filtered)<span class="op">$</span>ave_expr_genes_dissoc &lt;-<span class="st"> </span>ave_expr_genes_dissoc</span></code></pre></div>
+</p>
+</details>
+<p><br></p>
+<ul>
+<li>Plot an embedding of the dataset, using a color scale representing the average expression of genes involved in the stress signature upon cell dissociation. Comment.</li>
+</ul>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true"></a><span class="kw">plotReducedDim</span>(sce_filtered, <span class="st">&#39;ave_expr_genes_dissoc&#39;</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
 </div>
 </div>
 

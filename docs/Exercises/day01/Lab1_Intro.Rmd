@@ -210,6 +210,11 @@ And with a bit of `sed` magick...
 
 ```{sh eval = FALSE}
 ffq -t GSE GSE148963 | grep 'ftp://' | sed 's,.*ftp:,ftp:,' | sed 's,".*,,' > GSE148963_fastqlist.txt
+wget -i GSE148963_fastqlist.txt
+## `ffq` looks through GEO repository to fing metadata associated with the `GSE148963` entry (including downloading links)
+## grep 'ftp://' recovers the text lines that contain downloading links
+## the `sed` commands clean up the text lines
+## the `wget` command downloads locally the links listed in the generated file (GSE148963_fastqlist.txt)
 # wget -i GSE148963_fastqlist.txt ## Do not run, it would take too long...
 ```
 

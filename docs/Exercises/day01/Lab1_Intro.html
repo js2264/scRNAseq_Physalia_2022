@@ -1804,7 +1804,12 @@ To get it on your local computer (to save the lectures and exercises), go to <a 
 <div class="sourceCode" id="cb17"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="ex">ffq</span> -t GSE GSE148963 <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&#39;ftp://&#39;</span> </span></code></pre></div>
 <p>And with a bit of <code>sed</code> magick…</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="ex">ffq</span> -t GSE GSE148963 <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&#39;ftp://&#39;</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">&#39;s,.*ftp:,ftp:,&#39;</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">&#39;s,&quot;.*,,&#39;</span> <span class="op">&gt;</span> GSE148963_fastqlist.txt</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a><span class="co"># wget -i GSE148963_fastqlist.txt ## Do not run, it would take too long...</span></span></code></pre></div>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a><span class="fu">wget</span> -i GSE148963_fastqlist.txt</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true"></a><span class="co">## `ffq` looks through GEO repository to fing metadata associated with the `GSE148963` entry (including downloading links)</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true"></a><span class="co">## grep &#39;ftp://&#39; recovers the text lines that contain downloading links</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true"></a><span class="co">## the `sed` commands clean up the text lines</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true"></a><span class="co">## the `wget` command downloads locally the links listed in the generated file (GSE148963_fastqlist.txt)</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true"></a><span class="co"># wget -i GSE148963_fastqlist.txt ## Do not run, it would take too long...</span></span></code></pre></div>
 <blockquote>
 <p>Check the content of the reads</p>
 </blockquote>

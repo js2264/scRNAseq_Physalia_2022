@@ -40,8 +40,8 @@ require(tidyverse)
 
 We will prepare scRNAseq data from a PBMC run, provided by 10X and hosted by `Bioconductor` as a package. 
 
-> Which package from `Bioconductor` gives streamlined access to PBMC scRNAseq dataset from 10X Genomics?   
-> What does the object contain (type of data, number of cells, batches, organism, ...)? Can you get the same data from somewhere else? 
+- Which package from `Bioconductor` gives streamlined access to PBMC scRNAseq dataset from 10X Genomics?   
+- What does the object contain (type of data, number of cells, batches, organism, ...)? Can you get the same data from somewhere else? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -80,7 +80,7 @@ The choice of genes to include in this comparison may have a major impact on the
 Ideally, one wants to only select genes that contain useful information about the biology of the system while removing genes that contain random noise. 
 This aims to preserve interesting biological structure without the variance that obscures that structure.
 
-The simplest approach to feature selection is to simply compute the variance of the log-normalized expression values, to select the most variable genes. 
+The simplest approach to feature selection is to compute the variance of the log-normalized expression values, to select the most variable genes. 
 Modelling of the mean-variance relationship can be achieved by the `modelGeneVar()` function from the `scran` package:
 
 ```{r eval = FALSE}
@@ -113,7 +113,7 @@ We can further compress the dataset. The most widely used approach is `PCA`:
 it computes a small number of "components" (typically 5-50) optimally summarizing the variability of the whole dataset, 
 while retaining linearity of the underlying numerical data and being computationallt quite efficient. 
 
-> Leverage `scater` package to compute a `PCA` embedding of the filtered data by taking into account the technical variability.
+- Leverage `scater` package to compute a `PCA` embedding of the filtered data by taking into account the technical variability.
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -123,17 +123,8 @@ sce <- scran::denoisePCA(
     subset.row = HVGs, 
     min.rank = 15
 )
-library(patchwork)
 p <- scater::plotReducedDim(sce, 'PCA', colour_by = 'sizeFactor') + ggtitle('denoised PCA')
 p
-```
-</p></details><br>
-
-> Check the possible arguments for `runPCA`: how does this approach facilitate analysis of large-scale scRNAseq dataset, compared to a more "manual" approach?
-
-<details><summary>Show code</summary><p>
-```{r eval = FALSE}
-?scater::runPCA()
 ```
 </p></details><br>
 
@@ -160,7 +151,7 @@ it is a flexible and scalable technique for clustering even the largest scRNA-se
 We first build a graph where each node is a cell that is connected by edges to its nearest neighbors in the high-dimensional space. 
 Edges are weighted based on the similarity between the cells involved, with higher weight given to cells that are more closely related.
 
-> Compute graph-based clustering of the PBMC dataset. 
+- Compute graph-based clustering of the PBMC dataset. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -175,7 +166,7 @@ sce$clusters_graph <- factor(sce_clust)
 ```
 </p></details><br>
 
-> What are the main parameters to choose? How do they impact the clustering? 
+- What are the main parameters to choose? How do they impact the clustering? 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -202,34 +193,32 @@ it struggles at emphasizing the existence of clusters in complex datasets, when 
     - Multi-Dimensional Scaling (MDS)
     - Non-negative Matrix Factorization (NMF)
 
-> Explore the different dimensional reduction algorithms, trying different hyperparameters combinations. When you run these commands, pay attention to how long each command takes to run! While this run, check the `Help` page for each function (e.g. `?runTSNE`)
+- Explore the different dimensional reduction algorithms, trying different hyperparameters combinations. When you run these commands, pay attention to how long each command takes to run! While this run, check the `Help` page for each function (e.g. `?runTSNE`)
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
 reducedDims(sce)
 sce <- scater::runTSNE(sce, subset_row = HVGs)
 sce <- scater::runUMAP(sce, subset_row = HVGs)
-sce <- scater::runDiffusionMap(sce, subset_row = HVGs, dimred = 'PCA')
 reducedDims(sce)
-reducedDim(sce, 'DiffusionMap')[1:10, ]
+reducedDim(sce, 'UMAP')[1:10, ]
 ```
 
-> Use the `scater::plotReducedDim()` function to plot cells in each embedding. Comment.
+- Use the `scater::plotReducedDim()` function to plot cells in each embedding. Comment.
 
 ```{r eval = FALSE}
 require(patchwork)
 p<- scater::plotReducedDim(sce, 'PCA', colour_by = 'clusters_graph') + ggtitle('denoised PCA') +
     scater::plotReducedDim(sce, 'TSNE', colour_by = 'clusters_graph') + ggtitle('tSNE') +
-    scater::plotReducedDim(sce, 'UMAP', colour_by = 'clusters_graph') + ggtitle('UMAP') +
-    scater::plotReducedDim(sce, 'DiffusionMap', colour_by = 'clusters_graph') + ggtitle('Diffusion')   
+    scater::plotReducedDim(sce, 'UMAP', colour_by = 'clusters_graph') + ggtitle('UMAP')
 ```
 </p></details><br>
 
-### For the pros of clustering... Comparing different clustering approaches
+### For the pros of clustering... Compare different clustering approaches
 
 Leveraging the `bluster` package, different clustering approaches can be performed using a uniformed syntax, to compare their output. 
 
-> Using `clusterSweep()`, compare the effect of different `k` neighbor values when performing graph-based clustering. 
+- Using `clusterSweep()`, compare the effect of different `k` neighbor values when performing graph-based clustering. 
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -278,7 +267,7 @@ A general strategy is to perform DE tests between pairs of clusters and then com
 markers <- scran::findMarkers(sce, groups = sce$clusters_graph)
 ```
 
-> Find markers strongly overexpressed in each cluster. Check `?scran::findMarkers` to find the right options to use.
+- Find markers strongly overexpressed in each cluster. Check `?scran::findMarkers` to find the right options to use.
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -295,13 +284,13 @@ markers <- lapply(markers, function(df) {
 ```
 </p></details><br>
 
-> Plot average expression of the first marker of the first cluster in UMAP
+- Plot average expression of the first marker of the first cluster in UMAP
 
 ```{r eval = FALSE}
 p <- scater::plotReducedDim(sce, 'TSNE', colour_by = markers[[2]][[1]])
 ```
 
-> For each cluster, plot average expression of its markers in reduced dimensions
+- **BONUS:** For each cluster, plot average expression of its markers in reduced dimensions
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
@@ -326,38 +315,6 @@ p <- ggplot(df, aes(x, y, col = ave_expr)) +
 ```
 </p></details><br>
 
-> For data visualization aficionados... For each cluster, plot average expression of its markers as a dotplot 
-
-<details><summary>Show code</summary><p>
-```{r eval = FALSE}
-genes <- unique(unlist(markers))
-df <- logcounts(sce[genes, ]) %>% 
-        t() %>%
-        as_tibble() %>% 
-        mutate(
-            cluster = sce$clusters_graph, 
-        ) %>% 
-        pivot_longer(cols = contains(genes), names_to = 'gene', values_to = 'expr') %>% 
-        group_by(cluster, gene) %>%
-        summarize(ave_expr = mean(expr))
-ordered_genes <- pivot_wider(df, names_from = gene, values_from = ave_expr) %>% 
-    ungroup() %>%
-    select(-cluster) %>% 
-    t() %>% 
-    dist() %>% 
-    hclust()
-p <- ggplot(df, aes(
-    x = cluster, 
-    y = factor(gene, levels = ordered_genes$labels[ordered_genes$order]), 
-    col = ave_expr, 
-    size = ave_expr
-)) + 
-    geom_point() + 
-    scale_color_gradientn(colours = c('#ffecae', '#ffc46c', '#ff7e14', '#c9430f', '#8d0909')) +
-    theme_minimal()
-```
-</p></details><br>
-
 ### Automated cell annotation
 
 Many cell type reference databases are available over the Internet. 
@@ -376,7 +333,7 @@ table(sce$annotation)
 table(sce$annotation, sce$clusters_graph)
 ```
 
-> Using `scater` and `SingleR` utilities, visually compare the annotation scores for cells in each cluster. Did the automated annotation work robuslty? How does it compare to our clustering? Is automated annotation as sensitive as graph-based clustering?
+- Using `scater` and `SingleR` utilities, visually compare the annotation scores for cells in each cluster. Did the automated annotation work robuslty? How does it compare to our clustering? Is automated annotation as sensitive as graph-based clustering?
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}

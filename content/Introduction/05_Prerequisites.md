@@ -95,6 +95,9 @@ BiocManager::install('batchelor', update = FALSE)
 BiocManager::install('DropletUtils', update = FALSE)
 BiocManager::install('AUCell', update = FALSE)
 BiocManager::install('plyranges', update = FALSE)
+BiocManager::install('ggraph', update = FALSE)
+BiocManager::install('clustree', update = FALSE)
+BiocManager::install('celldex', update = FALSE)
 BiocManager::install('SingleR', update = FALSE)
 BiocManager::install('slingshot', update = FALSE)
 BiocManager::install('tradeSeq', update = FALSE)
@@ -103,6 +106,8 @@ BiocManager::install('BUSpaRse', update = FALSE)
 BiocManager::install('org.Mm.eg.db', update = FALSE)
 BiocManager::install('org.Hs.eg.db', update = FALSE)
 BiocManager::install('destiny', update = FALSE)
+BiocManager::install('TENxPBMCData', update = FALSE)
+BiocManager::install('scRNAseq', update = FALSE)
 "
 
 ## --- Create scRNAseq2022 conda env. and add other dependencies
