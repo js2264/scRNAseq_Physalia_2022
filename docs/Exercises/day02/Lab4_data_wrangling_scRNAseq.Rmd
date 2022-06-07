@@ -39,7 +39,9 @@ When loading libraries, we are asking R to load code for us written by someone e
 
 ```{r}
 library(tidyverse)
-library(SingleCellExperiments)
+library(SingleCellExperiment)
+library(scater)
+library(scran)
 ```
 
 ### 1B. Read in Pancreas counts matrix.
@@ -61,9 +63,9 @@ download.file('https://storage.googleapis.com/datarepo-acea73bc-bucket/93828852-
 
 <details><summary>Show code</summary><p>
 ```{r}
-cells <- read_tsv('GSE114802_org4_barcodes.tsv', col_names = FALSE)
-genes <- read_tsv('GSE114802_org4_genes.tsv', col_names = FALSE)
-counts <- read_csv('GSE114802_org4_counts.csv', col_names = TRUE)
+cells <- read_tsv('~/Share/GSE114802_org4_barcodes.tsv', col_names = FALSE)
+genes <- read_tsv('~/Share/GSE114802_org4_genes.tsv', col_names = FALSE)
+counts <- read_csv('~/Share/GSE114802_org4_counts.csv', col_names = TRUE)
 counts <- counts[, -1]
 rownames(counts) <- genes$X1
 ```
@@ -148,7 +150,7 @@ One can use this plot to investigate observations (potential cells) that are act
 
 <details><summary>Show code</summary><p>
 ```{r}
-plot(rev(sort(genes_per_cell)), xlab = 'cell', log = 'y', main = '# of counts per cell (ordered)')
+plot(sort(genes_per_cell), xlab = 'cell', log = 'y', main = '# of genes per cell (ordered)')
 ```
 </p></details><br>
 
@@ -156,7 +158,7 @@ plot(rev(sort(genes_per_cell)), xlab = 'cell', log = 'y', main = '# of counts pe
 
 <details><summary>Show code</summary><p>
 ```{r}
-sce <- quickPerCellQC(sce)
+sce <- scran::quickPerCellQC(sce)
 colData(sce)
 ```
 </p></details><br>
@@ -333,12 +335,14 @@ colData(sce_filtered)$ave_expr_genes_dissoc <- ave_expr_genes_dissoc
 
 - Plot an embedding of the dataset, using a color scale representing the average expression of genes involved in the stress signature upon cell dissociation. Comment.
 
+<details><summary>Show code</summary><p>
 ```{r}
-plotReducedDim(sce_filtered, 'ave_expr_genes_dissoc')
+plotReducedDim(sce_filtered, dimred = 'PCA', colour_by = 'ave_expr_genes_dissoc')
 ```
+</p></details><br>
 
 ## Session info 
 
-```{r echo = FALSE}
+```{r echo = FALSE, eval = TRUE}
 devtools::session_info()
 ```
