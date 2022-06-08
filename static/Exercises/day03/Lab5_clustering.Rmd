@@ -36,7 +36,7 @@ require(tidyverse)
 
 ## 1. Dimensional reduction for clustering
 
-### Preparing dataset 
+### 1A. Preparing dataset 
 
 We will prepare scRNAseq data from a PBMC run, provided by 10X and hosted by `Bioconductor` as a package. 
 
@@ -45,6 +45,8 @@ We will prepare scRNAseq data from a PBMC run, provided by 10X and hosted by `Bi
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
+library(tidyverse)
+library(SingleCellExperiment)
 sce <- TENxPBMCData::TENxPBMCData('pbmc4k')
 rownames(sce) <- scuttle::uniquifyFeatureNames(rowData(sce)$ENSEMBL_ID, rowData(sce)$Symbol_TENx)
 sce
@@ -54,7 +56,7 @@ table(sce$Library)
 ```
 </p></details><br>
 
-### Normalize counts using `scran`
+### 1B. Normalize counts using `scran`
 
 Just like in bulk high-throughput sequencing experiments, scRNAseq counts have to be normalized to the sequencing depth for each cell. 
 We can define the library size as the total sum of counts across all genes for each cell, the expected value of which is assumed to scale with any cell-specific biases. 
@@ -69,10 +71,12 @@ All of this can be done very simply using the combo `quickCluster() + computeSum
 clusters <- scran::quickCluster(sce)
 table(clusters)
 sce <- scran::computeSumFactors(sce, cluster = clusters)
+colData(sce)
 sce <- scuttle::logNormCounts(sce)
+assays(sce)
 ```
 
-### Feature selection
+### 1C. Feature selection
 
 We often use scRNAseq data in exploratory analyses to characterize heterogeneity across cells. 
 Procedures like clustering and dimensionality reduction compare cells based on their gene expression profiles. 
@@ -84,7 +88,6 @@ The simplest approach to feature selection is to compute the variance of the log
 Modelling of the mean-variance relationship can be achieved by the `modelGeneVar()` function from the `scran` package:
 
 ```{r eval = FALSE}
-require(tidyverse)
 sce_filtered_variance <- scran::modelGeneVar(sce)
 HVGs <- scran::getTopHVGs(sce_filtered_variance, prop = 0.1)
 rowData(sce)$isHVG <- rownames(sce) %in% HVGs
@@ -105,7 +108,7 @@ ggplot(df) +
     labs(x = 'Gene mean exp. (norm.)', y = 'Gene exp. variance')
 ```
 
-### PCA on filtered dataset
+### 1D. PCA on filtered dataset
 
 We now have normalized counts filtered for the top 500 genes varying with the greatest biological significance.  
 Still, that represents a 500 x nCells (~8,000) dataset (each row being a feature). This is still too big to reliably use in standard clustering approaches. 
@@ -138,7 +141,7 @@ After annotation based on marker genes, the clusters can be treated as proxies f
 more abstract biological concepts such as cell types or states. Clustering is thus a critical 
 step for extracting biological insights from scRNA-seq data.
 
-### Clustering algorithms
+### 2A. Clustering algorithms
 
 Three main approaches can be used: 
 
@@ -180,7 +183,7 @@ table(sce_clust, sce_clust2)
 ```
 </p></details><br>
 
-### Dimensional reduction for clustering visualization
+### 2B. Dimensional reduction for clustering visualization
 
 `PCA` is a powerful linear approach to compress large datasets into smaller dimensional spaces. However, 
 it struggles at emphasizing the existence of clusters in complex datasets, when visualized in 2D. 
@@ -214,7 +217,7 @@ p<- scater::plotReducedDim(sce, 'PCA', colour_by = 'clusters_graph') + ggtitle('
 ```
 </p></details><br>
 
-### For the pros of clustering... Compare different clustering approaches
+### 2C. For the pros of clustering... Compare different clustering approaches
 
 Leveraging the `bluster` package, different clustering approaches can be performed using a uniformed syntax, to compare their output. 
 
@@ -254,7 +257,7 @@ table(clusters$clusters[, 'k.5_cluster.fun.louvain'])
 
 ## 3. Cell annotation
 
-### Find marker genes 
+### 3A. Find marker genes 
 
 To interpret clustering results, one needs to identify the genes that drive separation between clusters.
 These marker genes allow to assign biological meaning to each cluster based on their functional annotation. 
@@ -290,32 +293,7 @@ markers <- lapply(markers, function(df) {
 p <- scater::plotReducedDim(sce, 'TSNE', colour_by = markers[[2]][[1]])
 ```
 
-- **BONUS:** For each cluster, plot average expression of its markers in reduced dimensions
-
-<details><summary>Show code</summary><p>
-```{r eval = FALSE}
-df <- lapply(markers, function(genes) {
-    logcounts(sce[genes, ]) %>% 
-        t() %>%
-        as_tibble() %>% 
-        mutate(
-            cellID = sce$Barcode, 
-            x = reducedDim(sce, 'TSNE')[,1], 
-            y = reducedDim(sce, 'TSNE')[,2]
-        ) %>% 
-        pivot_longer(cols = contains(genes), names_to = 'gene', values_to = 'expr') %>% 
-        group_by(x, y, cellID) %>%
-        summarize(ave_expr = mean(expr))
-}) %>% bind_rows(.id = 'marker_group')
-p <- ggplot(df, aes(x, y, col = ave_expr)) + 
-    geom_point() + 
-    facet_wrap(~marker_group) + 
-    scale_color_viridis_c() + 
-    theme_minimal()
-```
-</p></details><br>
-
-### Automated cell annotation
+### 3B. Automated cell annotation
 
 Many cell type reference databases are available over the Internet. 
 Today, we will use a reference constructed from `Blueprint` and `ENCODE` data (`Martens and Stunnenberg 2013`; `The ENCODE Project Consortium 2012`). 
@@ -358,6 +336,6 @@ This exercise was adapted from Chapts. 7-12 of [Orchestrating Single-Cell Analys
 
 ## Session info 
 
-```{r echo = FALSE}
+```{r eval = TRUE, echo = FALSE}
 devtools::session_info()
 ```
