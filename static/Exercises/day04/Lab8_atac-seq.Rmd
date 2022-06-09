@@ -23,9 +23,9 @@ Several packages are currently avaialble to process scATAC-seq data in R. These 
 
 1. Import, filter, normalize and plot cells from human hematopoiesis scATACseq dataset
 
-2. Compute gene activity scores and check known markers  
+2. Run chromVAR to identify TF activity in each cell cluster  
 
-3. Run chromVAR to identify TF activity in each cell cluster  
+3. Compute gene activity scores and check known markers  
 
 ## Load settings and packages
 
@@ -207,7 +207,114 @@ p <- DimPlot(hemato, group.by = 'renamed_clusters') + coord_fixed(ratio = 1)
 What can you observe in the `UMAP` projection of the dataset? Comment on the 
 separation of some cell types into different spatially-resolved clusters. 
 
-## 2. Compute gene activity scores
+
+## 2. chromVAR analysis
+
+### Get a SummarizedExperiment of scATACseq counts over peaks
+
+`chromVAR` works with raw counts stored as a `RangedSummarizedExperiment`. By now, you should be able to 
+easily extract the raw counts from a specific `Seurat` assay. Store it in a `RangedSummarizedExperiment` 
+(~ equivalent to `Seurat` assay but in `Bioconductor`). 
+
+What are the dimensions of the `RangedSummarizedExperiment` generated? What are the features and what are the columns? 
+
+```{r}
+library(SummarizedExperiment)
+sumExp <- SummarizedExperiment(
+    assays = list('counts' = GetAssayData(hemato, assay = 'ATAC', slot = 'counts')), 
+    rowRanges = GetAssayData(hemato, assay = 'ATAC', slot = 'ranges'), 
+    colData = hemato[[]]
+)
+dim(sumExp)
+```
+
+### Add GC bias to peaks 
+
+This step is important to correct GC bias associated with each peak. 
+
+```{r}
+sumExp <- chromVAR::addGCBias(sumExp, genome = BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19)
+```
+
+### Map motifs over peaks
+
+Using `motifmatchr` package, one can map a list of motifs (e.g. from JASPAR database)
+over a `RangedSummarizedExperiment` (or anything which can be coerced to a `GRanges`, actually). 
+
+First, you need to import motifs from a public database in `R`. This can be done 
+(among other ways) with the `TFBSTools` pacakge. 
+
+```{r}
+## - Import motifs from JASPAR database
+motifs <- TFBSTools::getMatrixSet(
+    JASPAR2020::JASPAR2020,
+    list(species = 9606, all_versions = FALSE)
+)
+names(motifs) <- TFBSTools::name(motifs)
+```
+
+Now map the subset of motifs of interest to the filtered peaks, using `motifmatchr::matchMotifs()`. 
+
+Read `matchMotifs()` documentation and run it on your `sumExp`. What is the class of the generated 
+object? Its dimensions? What are the features and what are the columns? 
+
+```{r}
+library(BiocParallel)
+register(MulticoreParam(workers = 16, progressbar = TRUE))
+motif_mappings <- motifmatchr::matchMotifs(motifs, sumExp, genome = BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19)
+class(motif_mappingss)
+dim(motif_mappings)
+```
+
+Because there are so many motifs and so many peaks, and in interest of time, 
+we will perform `chromVAR` analysis on a subset of motifs only. You can manually filter the motifs 
+list to motifs that may be relevant in our context (e.g. `EOMES`, or `GATA2`, ...). 
+
+```{r}
+## - Filter to interesting motifs to keep analysis relatively quick
+#       Feel free to select any TF of interest!
+motif_mappings_sub <- motif_mappings[, c('EOMES', 'GATA2', 'IRF8', 'EBF1', 'SPI1', 'TCF3', 'CEBPA')]
+```
+
+### Search for motifs with high deviation of mapping compared to background 
+
+`chromVAR`'s `computeDeviations()` function combines (1) the peak counts / cell (stored here in `sumExp`) and 
+(2) the TF mapping over each peak (stored here in `motif_mappings`). 
+to assess the mapping deviation for each TF over each cell compared to other cells. 
+
+Run `computeDeviations()` on the set of peaks and motifs. What is the class of the generated 
+object? Its dimensions? What are the features and what are the columns? 
+
+```{r}
+## - Find background signal
+bg <- chromVAR::getBackgroundPeaks(object = sumExp)
+## - For each motif, compute its mapping deviation over the filtered peaks
+motif_deviations <- chromVAR::computeDeviations(object = sumExp, annotations = motif_mappings_sub, background_peaks = bg)
+```
+
+### Check TF motif enrichment in different cell types 
+
+The `motif_deviations` object can be added as a new assay to the
+`hemato` `Seurat` object. This way, one can rely on `Seurat`-based 
+plotting functions to plot cells in their preferred dimensional space, and color 
+them using motif deviation scores computed with `chromVAR`. 
+
+```{r}
+hemato[['MOTIF']] <- Seurat::CreateAssayObject(counts = chromVAR::deviationScores(motif_deviations))
+DefaultAssay(hemato) <- 'MOTIF'
+list_p <- lapply(rownames(hemato), function(motif) {
+    FeaturePlot(hemato, features = motif, reduction = "umap") + 
+        scale_colour_gradientn(
+            colors = c('#190886', '#6F07F8', '#F954A5', '#FF9D66', '#edf118'),
+            limits = c(-5, 5), oob = scales::squish
+        ) + 
+        theme(aspect.ratio = 1)
+})
+list_p[[length(list_p) + 1]] <- DimPlot(hemato, group.by = 'renamed_clusters', reduction = "umap") + theme(aspect.ratio = 1)
+p <- cowplot::plot_grid(plotlist = list_p)
+```
+
+## 3. Compute gene activity scores
 
 Here again, the absence of `fragments` complicates the computation of gene activity scores. 
 Indeed, Signac's `GeneActivity()` function does require scATACseq fragment information. 
@@ -223,6 +330,8 @@ One way to do this is to:
 4. Group the data table by `cell + gene` and sum up the peak counts for each pair
 5. Transform this count table into a SparseMatrix
 6. Create the new `Seurat` assay containing "gene activity"-like scores and normalize it
+
+### Manually calculate gene activity scores
 
 - Step 1: 
 
@@ -327,112 +436,6 @@ basophils_genes <- Seurat::FindMarkers(
     min.pct = 0.15, 
     only.pos = TRUE
 )
-```
-
-## 3. chromVAR analysis
-
-### Get a SummarizedExperiment of scATACseq counts over peaks
-
-`chromVAR` works with raw counts stored as a `RangedSummarizedExperiment`. By now, you should be able to 
-easily extract the raw counts from a specific `Seurat` assay. Store it in a `RangedSummarizedExperiment` 
-(~ equivalent to `Seurat` assay but in `Bioconductor`). 
-
-What are the dimensions of the `RangedSummarizedExperiment` generated? What are the features and what are the columns? 
-
-```{r}
-library(SummarizedExperiment)
-sumExp <- SummarizedExperiment(
-    assays = list('counts' = GetAssayData(hemato, assay = 'ATAC', slot = 'counts')), 
-    rowRanges = GetAssayData(hemato, assay = 'ATAC', slot = 'ranges'), 
-    colData = hemato[[]]
-)
-dim(sumExp)
-```
-
-### Add GC bias to peaks 
-
-This step is important to correct GC bias associated with each peak. 
-
-```{r}
-sumExp <- chromVAR::addGCBias(sumExp, genome = BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19)
-```
-
-### Map motifs over peaks
-
-Using `motifmatchr` package, one can map a list of motifs (e.g. from JASPAR database)
-over a `RangedSummarizedExperiment` (or anything which can be coerced to a `GRanges`, actually). 
-
-First, you need to import motifs from a public database in `R`. This can be done 
-(among other ways) with the `TFBSTools` pacakge. 
-
-```{r}
-## - Import motifs from JASPAR database
-motifs <- TFBSTools::getMatrixSet(
-    JASPAR2020::JASPAR2020,
-    list(species = 9606, all_versions = FALSE)
-)
-names(motifs) <- TFBSTools::name(motifs)
-```
-
-Now map the subset of motifs of interest to the filtered peaks, using `motifmatchr::matchMotifs()`. 
-
-Read `matchMotifs()` documentation and run it on your `sumExp`. What is the class of the generated 
-object? Its dimensions? What are the features and what are the columns? 
-
-```{r}
-library(BiocParallel)
-register(MulticoreParam(workers = 16, progressbar = TRUE))
-motif_mappings <- motifmatchr::matchMotifs(motifs, sumExp, genome = BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19)
-class(motif_mappingss)
-dim(motif_mappings)
-```
-
-Because there are so many motifs and so many peaks, and in interest of time, 
-we will perform `chromVAR` analysis on a subset of motifs only. You can manually filter the motifs 
-list to motifs that may be relevant in our context (e.g. `EOMES`, or `GATA2`, ...). 
-
-```{r}
-## - Filter to interesting motifs to keep analysis relatively quick
-#       Feel free to select any TF of interest!
-motif_mappings_sub <- motif_mappings[, c('EOMES', 'GATA2', 'IRF8', 'EBF1', 'SPI1', 'TCF3', 'CEBPA')]
-```
-
-### Search for motifs with high deviation of mapping compared to background 
-
-`chromVAR`'s `computeDeviations()` function combines (1) the peak counts / cell (stored here in `sumExp`) and 
-(2) the TF mapping over each peak (stored here in `motif_mappings`). 
-to assess the mapping deviation for each TF over each cell compared to other cells. 
-
-Run `computeDeviations()` on the set of peaks and motifs. What is the class of the generated 
-object? Its dimensions? What are the features and what are the columns? 
-
-```{r}
-## - Find background signal
-bg <- chromVAR::getBackgroundPeaks(object = sumExp)
-## - For each motif, compute its mapping deviation over the filtered peaks
-motif_deviations <- chromVAR::computeDeviations(object = sumExp, annotations = motif_mappings_sub, background_peaks = bg)
-```
-
-### Check TF motif enrichment in different cell types 
-
-The `motif_deviations` object can be added as a new assay to the
-`hemato` `Seurat` object. This way, one can rely on `Seurat`-based 
-plotting functions to plot cells in their preferred dimensional space, and color 
-them using motif deviation scores computed with `chromVAR`. 
-
-```{r}
-hemato[['MOTIF']] <- Seurat::CreateAssayObject(counts = chromVAR::deviationScores(motif_deviations))
-DefaultAssay(hemato) <- 'MOTIF'
-list_p <- lapply(rownames(hemato), function(motif) {
-    FeaturePlot(hemato, features = motif, reduction = "umap") + 
-        scale_colour_gradientn(
-            colors = c('#190886', '#6F07F8', '#F954A5', '#FF9D66', '#edf118'),
-            limits = c(-5, 5), oob = scales::squish
-        ) + 
-        theme(aspect.ratio = 1)
-})
-list_p[[length(list_p) + 1]] <- DimPlot(hemato, group.by = 'renamed_clusters', reduction = "umap") + theme(aspect.ratio = 1)
-p <- cowplot::plot_grid(plotlist = list_p)
 ```
 
 ### Compare gene activity and TF activity

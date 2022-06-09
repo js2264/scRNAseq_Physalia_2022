@@ -1653,14 +1653,17 @@ font-weight: bold
       <li><a href="#process-data">Process data</a></li>
       </ul></li>
       </ul></li>
-      <li><a href="#compute-gene-activity-scores">2. Compute gene activity scores</a></li>
-      <li><a href="#chromvar-analysis">3. chromVAR analysis</a>
+      <li><a href="#chromvar-analysis">2. chromVAR analysis</a>
       <ul>
       <li><a href="#get-a-summarizedexperiment-of-scatacseq-counts-over-peaks">Get a SummarizedExperiment of scATACseq counts over peaks</a></li>
       <li><a href="#add-gc-bias-to-peaks">Add GC bias to peaks</a></li>
       <li><a href="#map-motifs-over-peaks">Map motifs over peaks</a></li>
       <li><a href="#search-for-motifs-with-high-deviation-of-mapping-compared-to-background">Search for motifs with high deviation of mapping compared to background</a></li>
       <li><a href="#check-tf-motif-enrichment-in-different-cell-types">Check TF motif enrichment in different cell types</a></li>
+      </ul></li>
+      <li><a href="#compute-gene-activity-scores">3. Compute gene activity scores</a>
+      <ul>
+      <li><a href="#manually-calculate-gene-activity-scores">Manually calculate gene activity scores</a></li>
       <li><a href="#compare-gene-activity-and-tf-activity">Compare gene activity and TF activity</a></li>
       </ul></li>
       </ul>
@@ -1682,8 +1685,8 @@ font-weight: bold
 <h3>The overarching goals of this lab are:</h3>
 <ol style="list-style-type: decimal">
 <li><p>Import, filter, normalize and plot cells from human hematopoiesis scATACseq dataset</p></li>
-<li><p>Compute gene activity scores and check known markers</p></li>
 <li><p>Run chromVAR to identify TF activity in each cell cluster</p></li>
+<li><p>Compute gene activity scores and check known markers</p></li>
 </ol>
 </div>
 <div id="load-settings-and-packages" class="section level2">
@@ -1817,8 +1820,75 @@ font-weight: bold
 </div>
 </div>
 </div>
+<div id="chromvar-analysis" class="section level2">
+<h2>2. chromVAR analysis</h2>
+<div id="get-a-summarizedexperiment-of-scatacseq-counts-over-peaks" class="section level3">
+<h3>Get a SummarizedExperiment of scATACseq counts over peaks</h3>
+<p><code>chromVAR</code> works with raw counts stored as a <code>RangedSummarizedExperiment</code>. By now, you should be able to easily extract the raw counts from a specific <code>Seurat</code> assay. Store it in a <code>RangedSummarizedExperiment</code> (~ equivalent to <code>Seurat</code> assay but in <code>Bioconductor</code>).</p>
+<p>What are the dimensions of the <code>RangedSummarizedExperiment</code> generated? What are the features and what are the columns?</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="kw">library</span>(SummarizedExperiment)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>sumExp &lt;-<span class="st"> </span><span class="kw">SummarizedExperiment</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a>    <span class="dt">assays =</span> <span class="kw">list</span>(<span class="st">&#39;counts&#39;</span> =<span class="st"> </span><span class="kw">GetAssayData</span>(hemato, <span class="dt">assay =</span> <span class="st">&#39;ATAC&#39;</span>, <span class="dt">slot =</span> <span class="st">&#39;counts&#39;</span>)), </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a>    <span class="dt">rowRanges =</span> <span class="kw">GetAssayData</span>(hemato, <span class="dt">assay =</span> <span class="st">&#39;ATAC&#39;</span>, <span class="dt">slot =</span> <span class="st">&#39;ranges&#39;</span>), </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a>    <span class="dt">colData =</span> hemato[[]]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a><span class="kw">dim</span>(sumExp)</span></code></pre></div>
+</div>
+<div id="add-gc-bias-to-peaks" class="section level3">
+<h3>Add GC bias to peaks</h3>
+<p>This step is important to correct GC bias associated with each peak.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a>sumExp &lt;-<span class="st"> </span>chromVAR<span class="op">::</span><span class="kw">addGCBias</span>(sumExp, <span class="dt">genome =</span> BSgenome.Hsapiens.UCSC.hg19<span class="op">::</span>BSgenome.Hsapiens.UCSC.hg19)</span></code></pre></div>
+</div>
+<div id="map-motifs-over-peaks" class="section level3">
+<h3>Map motifs over peaks</h3>
+<p>Using <code>motifmatchr</code> package, one can map a list of motifs (e.g. from JASPAR database) over a <code>RangedSummarizedExperiment</code> (or anything which can be coerced to a <code>GRanges</code>, actually).</p>
+<p>First, you need to import motifs from a public database in <code>R</code>. This can be done (among other ways) with the <code>TFBSTools</code> pacakge.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co">## - Import motifs from JASPAR database</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>motifs &lt;-<span class="st"> </span>TFBSTools<span class="op">::</span><span class="kw">getMatrixSet</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a>    JASPAR2020<span class="op">::</span>JASPAR2020,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a>    <span class="kw">list</span>(<span class="dt">species =</span> <span class="dv">9606</span>, <span class="dt">all_versions =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a><span class="kw">names</span>(motifs) &lt;-<span class="st"> </span>TFBSTools<span class="op">::</span><span class="kw">name</span>(motifs)</span></code></pre></div>
+<p>Now map the subset of motifs of interest to the filtered peaks, using <code>motifmatchr::matchMotifs()</code>.</p>
+<p>Read <code>matchMotifs()</code> documentation and run it on your <code>sumExp</code>. What is the class of the generated object? Its dimensions? What are the features and what are the columns?</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="kw">library</span>(BiocParallel)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a><span class="kw">register</span>(<span class="kw">MulticoreParam</span>(<span class="dt">workers =</span> <span class="dv">16</span>, <span class="dt">progressbar =</span> <span class="ot">TRUE</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a>motif_mappings &lt;-<span class="st"> </span>motifmatchr<span class="op">::</span><span class="kw">matchMotifs</span>(motifs, sumExp, <span class="dt">genome =</span> BSgenome.Hsapiens.UCSC.hg19<span class="op">::</span>BSgenome.Hsapiens.UCSC.hg19)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a><span class="kw">class</span>(motif_mappingss)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a><span class="kw">dim</span>(motif_mappings)</span></code></pre></div>
+<p>Because there are so many motifs and so many peaks, and in interest of time, we will perform <code>chromVAR</code> analysis on a subset of motifs only. You can manually filter the motifs list to motifs that may be relevant in our context (e.g. <code>EOMES</code>, or <code>GATA2</code>, …).</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co">## - Filter to interesting motifs to keep analysis relatively quick</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a><span class="co">#       Feel free to select any TF of interest!</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a>motif_mappings_sub &lt;-<span class="st"> </span>motif_mappings[, <span class="kw">c</span>(<span class="st">&#39;EOMES&#39;</span>, <span class="st">&#39;GATA2&#39;</span>, <span class="st">&#39;IRF8&#39;</span>, <span class="st">&#39;EBF1&#39;</span>, <span class="st">&#39;SPI1&#39;</span>, <span class="st">&#39;TCF3&#39;</span>, <span class="st">&#39;CEBPA&#39;</span>)]</span></code></pre></div>
+</div>
+<div id="search-for-motifs-with-high-deviation-of-mapping-compared-to-background" class="section level3">
+<h3>Search for motifs with high deviation of mapping compared to background</h3>
+<p><code>chromVAR</code>’s <code>computeDeviations()</code> function combines (1) the peak counts / cell (stored here in <code>sumExp</code>) and (2) the TF mapping over each peak (stored here in <code>motif_mappings</code>). to assess the mapping deviation for each TF over each cell compared to other cells.</p>
+<p>Run <code>computeDeviations()</code> on the set of peaks and motifs. What is the class of the generated object? Its dimensions? What are the features and what are the columns?</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co">## - Find background signal</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a>bg &lt;-<span class="st"> </span>chromVAR<span class="op">::</span><span class="kw">getBackgroundPeaks</span>(<span class="dt">object =</span> sumExp)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a><span class="co">## - For each motif, compute its mapping deviation over the filtered peaks</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a>motif_deviations &lt;-<span class="st"> </span>chromVAR<span class="op">::</span><span class="kw">computeDeviations</span>(<span class="dt">object =</span> sumExp, <span class="dt">annotations =</span> motif_mappings_sub, <span class="dt">background_peaks =</span> bg)</span></code></pre></div>
+</div>
+<div id="check-tf-motif-enrichment-in-different-cell-types" class="section level3">
+<h3>Check TF motif enrichment in different cell types</h3>
+<p>The <code>motif_deviations</code> object can be added as a new assay to the <code>hemato</code> <code>Seurat</code> object. This way, one can rely on <code>Seurat</code>-based plotting functions to plot cells in their preferred dimensional space, and color them using motif deviation scores computed with <code>chromVAR</code>.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a>hemato[[<span class="st">&#39;MOTIF&#39;</span>]] &lt;-<span class="st"> </span>Seurat<span class="op">::</span><span class="kw">CreateAssayObject</span>(<span class="dt">counts =</span> chromVAR<span class="op">::</span><span class="kw">deviationScores</span>(motif_deviations))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a><span class="kw">DefaultAssay</span>(hemato) &lt;-<span class="st"> &#39;MOTIF&#39;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a>list_p &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="kw">rownames</span>(hemato), <span class="cf">function</span>(motif) {</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a>    <span class="kw">FeaturePlot</span>(hemato, <span class="dt">features =</span> motif, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true"></a><span class="st">        </span><span class="kw">scale_colour_gradientn</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true"></a>            <span class="dt">colors =</span> <span class="kw">c</span>(<span class="st">&#39;#190886&#39;</span>, <span class="st">&#39;#6F07F8&#39;</span>, <span class="st">&#39;#F954A5&#39;</span>, <span class="st">&#39;#FF9D66&#39;</span>, <span class="st">&#39;#edf118&#39;</span>),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true"></a>            <span class="dt">limits =</span> <span class="kw">c</span>(<span class="op">-</span><span class="dv">5</span>, <span class="dv">5</span>), <span class="dt">oob =</span> scales<span class="op">::</span>squish</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true"></a>        ) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true"></a><span class="st">        </span><span class="kw">theme</span>(<span class="dt">aspect.ratio =</span> <span class="dv">1</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true"></a>})</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true"></a>list_p[[<span class="kw">length</span>(list_p) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>]] &lt;-<span class="st"> </span><span class="kw">DimPlot</span>(hemato, <span class="dt">group.by =</span> <span class="st">&#39;renamed_clusters&#39;</span>, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">aspect.ratio =</span> <span class="dv">1</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true"></a>p &lt;-<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist =</span> list_p)</span></code></pre></div>
+</div>
+</div>
 <div id="compute-gene-activity-scores" class="section level2">
-<h2>2. Compute gene activity scores</h2>
+<h2>3. Compute gene activity scores</h2>
 <p>Here again, the absence of <code>fragments</code> complicates the computation of gene activity scores. Indeed, Signac’s <code>GeneActivity()</code> function does require scATACseq fragment information.</p>
 <p>Without actual fragments, can you think of a way to still compute a ‘gene activity’-like score, approximating ~ the sum of scATACseq fragments overlapping a gene?</p>
 <p>One way to do this is to:</p>
@@ -1830,156 +1900,92 @@ font-weight: bold
 <li>Transform this count table into a SparseMatrix</li>
 <li>Create the new <code>Seurat</code> assay containing “gene activity”-like scores and normalize it</li>
 </ol>
+<div id="manually-calculate-gene-activity-scores" class="section level3">
+<h3>Manually calculate gene activity scores</h3>
 <ul>
 <li>Step 1:</li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="co">## - Extend all the genes in hg19 so that it covers 1000 bp upstream of the genebody </span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>hg_genes_extended &lt;-<span class="st"> </span>ensembldb<span class="op">::</span><span class="kw">genes</span>(EnsDb.Hsapiens.v75<span class="op">::</span>EnsDb.Hsapiens.v75) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">filter</span>(gene_biotype <span class="op">==</span><span class="st"> &#39;protein_coding&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">keepStandardChromosomes</span>(<span class="dt">pruning.mode =</span> <span class="st">&#39;coarse&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a><span class="st">    </span><span class="kw">filter</span>(seqnames <span class="op">!=</span><span class="st"> &#39;MT&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a><span class="st">    </span><span class="kw">resize</span>(<span class="dt">width =</span> <span class="kw">width</span>(.) <span class="op">+</span><span class="st"> </span><span class="dv">2000</span>, <span class="dt">fix =</span> <span class="st">&#39;start&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a><span class="st">    </span><span class="kw">shift</span>(<span class="dv">1000</span> <span class="op">*</span><span class="st"> </span><span class="kw">ifelse</span>(<span class="kw">strand</span>(.) <span class="op">==</span><span class="st"> &#39;+&#39;</span>, <span class="dv">-1</span>, <span class="dv">1</span>)) <span class="op">%&gt;%</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">id =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(.)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">gene_name =</span> <span class="kw">make.unique</span>(gene_name))</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true"></a><span class="kw">seqlevelsStyle</span>(hg_genes_extended) &lt;-<span class="st"> &#39;UCSC&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="co">## - Extend all the genes in hg19 so that it covers 1000 bp upstream of the genebody </span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a>hg_genes_extended &lt;-<span class="st"> </span>ensembldb<span class="op">::</span><span class="kw">genes</span>(EnsDb.Hsapiens.v75<span class="op">::</span>EnsDb.Hsapiens.v75) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">filter</span>(gene_biotype <span class="op">==</span><span class="st"> &#39;protein_coding&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">keepStandardChromosomes</span>(<span class="dt">pruning.mode =</span> <span class="st">&#39;coarse&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true"></a><span class="st">    </span><span class="kw">filter</span>(seqnames <span class="op">!=</span><span class="st"> &#39;MT&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true"></a><span class="st">    </span><span class="kw">resize</span>(<span class="dt">width =</span> <span class="kw">width</span>(.) <span class="op">+</span><span class="st"> </span><span class="dv">2000</span>, <span class="dt">fix =</span> <span class="st">&#39;start&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true"></a><span class="st">    </span><span class="kw">shift</span>(<span class="dv">1000</span> <span class="op">*</span><span class="st"> </span><span class="kw">ifelse</span>(<span class="kw">strand</span>(.) <span class="op">==</span><span class="st"> &#39;+&#39;</span>, <span class="dv">-1</span>, <span class="dv">1</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">id =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(.)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">gene_name =</span> <span class="kw">make.unique</span>(gene_name))</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true"></a><span class="kw">seqlevelsStyle</span>(hg_genes_extended) &lt;-<span class="st"> &#39;UCSC&#39;</span></span></code></pre></div>
 <ul>
 <li>Step 2:</li>
 </ul>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="co">## - Find overlaps between all the scATAC peaks and the extended genes</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a>ov &lt;-<span class="st"> </span><span class="kw">findOverlaps</span>(<span class="dt">query =</span> <span class="kw">granges</span>(hemato), <span class="dt">subject =</span> hg_genes_extended)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a><span class="co">## - For each peak-gene pair, add peak name and gene name</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a>ov &lt;-<span class="st"> </span><span class="kw">as_tibble</span>(ov) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a><span class="st">    </span>dplyr<span class="op">::</span><span class="kw">rename</span>(<span class="dt">peaknb =</span> queryHits, <span class="dt">genenb =</span> subjectHits) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">gene_name =</span> hg_genes_extended<span class="op">$</span>gene_name[genenb]) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">row =</span> <span class="kw">granges</span>(hemato)<span class="op">$</span>peak[peaknb])</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="co">## - Find overlaps between all the scATAC peaks and the extended genes</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a>ov &lt;-<span class="st"> </span><span class="kw">findOverlaps</span>(<span class="dt">query =</span> <span class="kw">granges</span>(hemato), <span class="dt">subject =</span> hg_genes_extended)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true"></a><span class="co">## - For each peak-gene pair, add peak name and gene name</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true"></a>ov &lt;-<span class="st"> </span><span class="kw">as_tibble</span>(ov) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true"></a><span class="st">    </span>dplyr<span class="op">::</span><span class="kw">rename</span>(<span class="dt">peaknb =</span> queryHits, <span class="dt">genenb =</span> subjectHits) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">gene_name =</span> hg_genes_extended<span class="op">$</span>gene_name[genenb]) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">row =</span> <span class="kw">granges</span>(hemato)<span class="op">$</span>peak[peaknb])</span></code></pre></div>
 <ul>
 <li>Step 3:</li>
 </ul>
 <p>This step requires to transform the original <code>counts</code> SparseMatrix into a tidy <code>data.table</code>, to enable fast <code>left_join</code> between (1) peak counts / cell and (2) gene &lt;-&gt; peak relationship table (<code>ov</code>)</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co">## - Extract counts for the gene-associated peaks</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>cnts &lt;-<span class="st"> </span><span class="kw">GetAssayData</span>(hemato, <span class="st">&#39;counts&#39;</span>)[<span class="kw">unique</span>(ov<span class="op">$</span>peaknb), ]</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a><span class="co">## - Transform the cnts SparseMatrix into a tidy dense long data.frame</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a>tidy_cnts &lt;-<span class="st"> </span>broom<span class="op">::</span><span class="kw">tidy</span>(cnts) </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a><span class="co">## - Transform the dense long data.frame into a data.table for faster computation</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a>tidy_cnts &lt;-<span class="st"> </span>dtplyr<span class="op">::</span><span class="kw">lazy_dt</span>(tidy_cnts)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a><span class="co">## - For each peak/cell count value, associate the corresponding gene</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true"></a>joint_data &lt;-<span class="st"> </span><span class="kw">left_join</span>(tidy_cnts, ov, <span class="dt">by =</span> <span class="st">&#39;row&#39;</span>)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true"></a><span class="kw">class</span>(joint_data)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true"></a><span class="co">## WATCH OUT: You cannot see what is stored into `joint_data` as it </span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true"></a><span class="co">## is a deferred data.table, i.e. it will only execute once you pipe it to </span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true"></a><span class="co">## `as_tibble()`. Once you pipe it, the computation starts and takes a lot of time.</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="co">## - Extract counts for the gene-associated peaks</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a>cnts &lt;-<span class="st"> </span><span class="kw">GetAssayData</span>(hemato, <span class="st">&#39;counts&#39;</span>)[<span class="kw">unique</span>(ov<span class="op">$</span>peaknb), ]</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a><span class="co">## - Transform the cnts SparseMatrix into a tidy dense long data.frame</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a>tidy_cnts &lt;-<span class="st"> </span>broom<span class="op">::</span><span class="kw">tidy</span>(cnts) </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a><span class="co">## - Transform the dense long data.frame into a data.table for faster computation</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true"></a>tidy_cnts &lt;-<span class="st"> </span>dtplyr<span class="op">::</span><span class="kw">lazy_dt</span>(tidy_cnts)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true"></a><span class="co">## - For each peak/cell count value, associate the corresponding gene</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true"></a>joint_data &lt;-<span class="st"> </span><span class="kw">left_join</span>(tidy_cnts, ov, <span class="dt">by =</span> <span class="st">&#39;row&#39;</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true"></a><span class="kw">class</span>(joint_data)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true"></a><span class="co">## WATCH OUT: You cannot see what is stored into `joint_data` as it </span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true"></a><span class="co">## is a deferred data.table, i.e. it will only execute once you pipe it to </span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true"></a><span class="co">## `as_tibble()`. Once you pipe it, the computation starts and takes a lot of time.</span></span></code></pre></div>
 <ul>
 <li>Step 4:</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="co">## - Group the joint_table by gene + cell and sum up all the counts</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a>gene_averaged_cnts &lt;-<span class="st"> </span><span class="kw">group_by</span>(joint_data, column, gene_name) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">summarize</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">as_tibble</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="co">## - Group the joint_table by gene + cell and sum up all the counts</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a>gene_averaged_cnts &lt;-<span class="st"> </span><span class="kw">group_by</span>(joint_data, column, gene_name) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">summarize</span>(<span class="dt">n =</span> <span class="kw">sum</span>(value)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">as_tibble</span>()</span></code></pre></div>
 <ul>
 <li>Step 5:</li>
 </ul>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co">## - To transform the data.table into SparseMatrix, it needs to be numerical</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>gene_averaged_cnts_num &lt;-<span class="st"> </span><span class="kw">data.matrix</span>(gene_averaged_cnts)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a><span class="co">## - Transform into sparse matrix </span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a>gene_averaged_cnts_sparse &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">sparseMatrix</span>(</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a>    <span class="dt">i =</span> gene_averaged_cnts_num[, <span class="st">&#39;gene_name&#39;</span>],</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true"></a>    <span class="dt">j =</span> gene_averaged_cnts_num[, <span class="st">&#39;column&#39;</span>],</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true"></a>    <span class="dt">x =</span> gene_averaged_cnts_num[, <span class="st">&#39;n&#39;</span>],</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true"></a>)</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true"></a><span class="co">## - Add back the actual cell and genes names</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true"></a><span class="kw">colnames</span>(gene_averaged_cnts_sparse) &lt;-<span class="st"> </span><span class="kw">sort</span>(<span class="kw">unique</span>(gene_averaged_cnts<span class="op">$</span>column))</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true"></a><span class="kw">rownames</span>(gene_averaged_cnts_sparse) &lt;-<span class="st"> </span><span class="kw">sort</span>(<span class="kw">unique</span>(gene_averaged_cnts<span class="op">$</span>gene_name))</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="co">## - To transform the data.table into SparseMatrix, it needs to be numerical</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a>gene_averaged_cnts_num &lt;-<span class="st"> </span><span class="kw">data.matrix</span>(gene_averaged_cnts)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true"></a><span class="co">## - Transform into sparse matrix </span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true"></a>gene_averaged_cnts_sparse &lt;-<span class="st"> </span>Matrix<span class="op">::</span><span class="kw">sparseMatrix</span>(</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true"></a>    <span class="dt">i =</span> gene_averaged_cnts_num[, <span class="st">&#39;gene_name&#39;</span>],</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true"></a>    <span class="dt">j =</span> gene_averaged_cnts_num[, <span class="st">&#39;column&#39;</span>],</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true"></a>    <span class="dt">x =</span> gene_averaged_cnts_num[, <span class="st">&#39;n&#39;</span>],</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true"></a>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true"></a><span class="co">## - Add back the actual cell and genes names</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true"></a><span class="kw">colnames</span>(gene_averaged_cnts_sparse) &lt;-<span class="st"> </span><span class="kw">sort</span>(<span class="kw">unique</span>(gene_averaged_cnts<span class="op">$</span>column))</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true"></a><span class="kw">rownames</span>(gene_averaged_cnts_sparse) &lt;-<span class="st"> </span><span class="kw">sort</span>(<span class="kw">unique</span>(gene_averaged_cnts<span class="op">$</span>gene_name))</span></code></pre></div>
 <ul>
 <li>Step 6:</li>
 </ul>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co">## - Create new assay in hemato</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a>hemato[[<span class="st">&#39;GENE&#39;</span>]] &lt;-<span class="st"> </span><span class="kw">CreateAssayObject</span>(<span class="dt">counts =</span> gene_averaged_cnts_sparse)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a><span class="co">## - Normalize this new assay with SCTransform</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a>hemato &lt;-<span class="st"> </span><span class="kw">SCTransform</span>(hemato, <span class="dt">assay =</span> <span class="st">&#39;GENE&#39;</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true"></a><span class="co">## - Save the resulting object!</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true"></a><span class="kw">saveRDS</span>(hemato, <span class="st">&#39;scATAC/hemato.rds&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="co">## - Create new assay in hemato</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true"></a>hemato[[<span class="st">&#39;GENE&#39;</span>]] &lt;-<span class="st"> </span><span class="kw">CreateAssayObject</span>(<span class="dt">counts =</span> gene_averaged_cnts_sparse)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true"></a><span class="co">## - Normalize this new assay with SCTransform</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true"></a>hemato &lt;-<span class="st"> </span><span class="kw">SCTransform</span>(hemato, <span class="dt">assay =</span> <span class="st">&#39;GENE&#39;</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true"></a><span class="co">## - Save the resulting object!</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true"></a><span class="kw">saveRDS</span>(hemato, <span class="st">&#39;scATAC/hemato.rds&#39;</span>)</span></code></pre></div>
 <p>Now the <code>Seurat</code> object contains 3 assays, the first one corresponding to the original scATACseq counts, and the second one containing gene activity pseudocounts, and the third one containing <code>SCT</code>-normalized data. One can now perform “gene differential expression”-like analysis using the <code>SCT</code> assay!</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="co">## - Reduce dimensionality to visualize cells in 2D</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a>hemato &lt;-<span class="st"> </span><span class="kw">RunPCA</span>(hemato) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">RunUMAP</span>(<span class="dt">reduction =</span> <span class="st">&#39;pca&#39;</span>, <span class="dt">dims =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">50</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a><span class="co">## - Find gene markers for Basophils</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a><span class="kw">DefaultAssay</span>(hemato) &lt;-<span class="st"> &quot;SCT&quot;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true"></a>p &lt;-<span class="st"> </span><span class="kw">FeaturePlot</span>(hemato, <span class="dt">features =</span> <span class="st">&#39;CD14&#39;</span>, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="co"># Or NCR1 (NKp46), CD8A, CD14, MS4A1</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true"></a><span class="kw">Idents</span>(hemato) &lt;-<span class="st"> </span>hemato<span class="op">$</span>renamed_clusters</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true"></a>basophils_genes &lt;-<span class="st"> </span>Seurat<span class="op">::</span><span class="kw">FindMarkers</span>(</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true"></a>    <span class="dt">object =</span> hemato,</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true"></a>    <span class="dt">assay =</span> <span class="st">&#39;GENE&#39;</span>, </span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true"></a>    <span class="dt">ident.1 =</span> <span class="st">&#39;Baso.&#39;</span>,</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true"></a>    <span class="dt">ident.2 =</span> <span class="kw">unique</span>(<span class="kw">Idents</span>(hemato)[<span class="kw">Idents</span>(hemato) <span class="op">!=</span><span class="st"> &#39;Baso.&#39;</span>]),</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true"></a>    <span class="dt">min.pct =</span> <span class="fl">0.15</span>, </span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true"></a>    <span class="dt">only.pos =</span> <span class="ot">TRUE</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true"></a>)</span></code></pre></div>
-</div>
-<div id="chromvar-analysis" class="section level2">
-<h2>3. chromVAR analysis</h2>
-<div id="get-a-summarizedexperiment-of-scatacseq-counts-over-peaks" class="section level3">
-<h3>Get a SummarizedExperiment of scATACseq counts over peaks</h3>
-<p><code>chromVAR</code> works with raw counts stored as a <code>RangedSummarizedExperiment</code>. By now, you should be able to easily extract the raw counts from a specific <code>Seurat</code> assay. Store it in a <code>RangedSummarizedExperiment</code> (~ equivalent to <code>Seurat</code> assay but in <code>Bioconductor</code>).</p>
-<p>What are the dimensions of the <code>RangedSummarizedExperiment</code> generated? What are the features and what are the columns?</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="kw">library</span>(SummarizedExperiment)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a>sumExp &lt;-<span class="st"> </span><span class="kw">SummarizedExperiment</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a>    <span class="dt">assays =</span> <span class="kw">list</span>(<span class="st">&#39;counts&#39;</span> =<span class="st"> </span><span class="kw">GetAssayData</span>(hemato, <span class="dt">assay =</span> <span class="st">&#39;ATAC&#39;</span>, <span class="dt">slot =</span> <span class="st">&#39;counts&#39;</span>)), </span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a>    <span class="dt">rowRanges =</span> <span class="kw">GetAssayData</span>(hemato, <span class="dt">assay =</span> <span class="st">&#39;ATAC&#39;</span>, <span class="dt">slot =</span> <span class="st">&#39;ranges&#39;</span>), </span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true"></a>    <span class="dt">colData =</span> hemato[[]]</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true"></a>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true"></a><span class="kw">dim</span>(sumExp)</span></code></pre></div>
-</div>
-<div id="add-gc-bias-to-peaks" class="section level3">
-<h3>Add GC bias to peaks</h3>
-<p>This step is important to correct GC bias associated with each peak.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a>sumExp &lt;-<span class="st"> </span>chromVAR<span class="op">::</span><span class="kw">addGCBias</span>(sumExp, <span class="dt">genome =</span> BSgenome.Hsapiens.UCSC.hg19<span class="op">::</span>BSgenome.Hsapiens.UCSC.hg19)</span></code></pre></div>
-</div>
-<div id="map-motifs-over-peaks" class="section level3">
-<h3>Map motifs over peaks</h3>
-<p>Using <code>motifmatchr</code> package, one can map a list of motifs (e.g. from JASPAR database) over a <code>RangedSummarizedExperiment</code> (or anything which can be coerced to a <code>GRanges</code>, actually).</p>
-<p>First, you need to import motifs from a public database in <code>R</code>. This can be done (among other ways) with the <code>TFBSTools</code> pacakge.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="co">## - Import motifs from JASPAR database</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a>motifs &lt;-<span class="st"> </span>TFBSTools<span class="op">::</span><span class="kw">getMatrixSet</span>(</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a>    JASPAR2020<span class="op">::</span>JASPAR2020,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a>    <span class="kw">list</span>(<span class="dt">species =</span> <span class="dv">9606</span>, <span class="dt">all_versions =</span> <span class="ot">FALSE</span>)</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true"></a><span class="kw">names</span>(motifs) &lt;-<span class="st"> </span>TFBSTools<span class="op">::</span><span class="kw">name</span>(motifs)</span></code></pre></div>
-<p>Now map the subset of motifs of interest to the filtered peaks, using <code>motifmatchr::matchMotifs()</code>.</p>
-<p>Read <code>matchMotifs()</code> documentation and run it on your <code>sumExp</code>. What is the class of the generated object? Its dimensions? What are the features and what are the columns?</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="kw">library</span>(BiocParallel)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a><span class="kw">register</span>(<span class="kw">MulticoreParam</span>(<span class="dt">workers =</span> <span class="dv">16</span>, <span class="dt">progressbar =</span> <span class="ot">TRUE</span>))</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a>motif_mappings &lt;-<span class="st"> </span>motifmatchr<span class="op">::</span><span class="kw">matchMotifs</span>(motifs, sumExp, <span class="dt">genome =</span> BSgenome.Hsapiens.UCSC.hg19<span class="op">::</span>BSgenome.Hsapiens.UCSC.hg19)</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true"></a><span class="kw">class</span>(motif_mappingss)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true"></a><span class="kw">dim</span>(motif_mappings)</span></code></pre></div>
-<p>Because there are so many motifs and so many peaks, and in interest of time, we will perform <code>chromVAR</code> analysis on a subset of motifs only. You can manually filter the motifs list to motifs that may be relevant in our context (e.g. <code>EOMES</code>, or <code>GATA2</code>, …).</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="co">## - Filter to interesting motifs to keep analysis relatively quick</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a><span class="co">#       Feel free to select any TF of interest!</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true"></a>motif_mappings_sub &lt;-<span class="st"> </span>motif_mappings[, <span class="kw">c</span>(<span class="st">&#39;EOMES&#39;</span>, <span class="st">&#39;GATA2&#39;</span>, <span class="st">&#39;IRF8&#39;</span>, <span class="st">&#39;EBF1&#39;</span>, <span class="st">&#39;SPI1&#39;</span>, <span class="st">&#39;TCF3&#39;</span>, <span class="st">&#39;CEBPA&#39;</span>)]</span></code></pre></div>
-</div>
-<div id="search-for-motifs-with-high-deviation-of-mapping-compared-to-background" class="section level3">
-<h3>Search for motifs with high deviation of mapping compared to background</h3>
-<p><code>chromVAR</code>’s <code>computeDeviations()</code> function combines (1) the peak counts / cell (stored here in <code>sumExp</code>) and (2) the TF mapping over each peak (stored here in <code>motif_mappings</code>). to assess the mapping deviation for each TF over each cell compared to other cells.</p>
-<p>Run <code>computeDeviations()</code> on the set of peaks and motifs. What is the class of the generated object? Its dimensions? What are the features and what are the columns?</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="co">## - Find background signal</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true"></a>bg &lt;-<span class="st"> </span>chromVAR<span class="op">::</span><span class="kw">getBackgroundPeaks</span>(<span class="dt">object =</span> sumExp)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true"></a><span class="co">## - For each motif, compute its mapping deviation over the filtered peaks</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true"></a>motif_deviations &lt;-<span class="st"> </span>chromVAR<span class="op">::</span><span class="kw">computeDeviations</span>(<span class="dt">object =</span> sumExp, <span class="dt">annotations =</span> motif_mappings_sub, <span class="dt">background_peaks =</span> bg)</span></code></pre></div>
-</div>
-<div id="check-tf-motif-enrichment-in-different-cell-types" class="section level3">
-<h3>Check TF motif enrichment in different cell types</h3>
-<p>The <code>motif_deviations</code> object can be added as a new assay to the <code>hemato</code> <code>Seurat</code> object. This way, one can rely on <code>Seurat</code>-based plotting functions to plot cells in their preferred dimensional space, and color them using motif deviation scores computed with <code>chromVAR</code>.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a>hemato[[<span class="st">&#39;MOTIF&#39;</span>]] &lt;-<span class="st"> </span>Seurat<span class="op">::</span><span class="kw">CreateAssayObject</span>(<span class="dt">counts =</span> chromVAR<span class="op">::</span><span class="kw">deviationScores</span>(motif_deviations))</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a><span class="kw">DefaultAssay</span>(hemato) &lt;-<span class="st"> &#39;MOTIF&#39;</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a>list_p &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="kw">rownames</span>(hemato), <span class="cf">function</span>(motif) {</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a>    <span class="kw">FeaturePlot</span>(hemato, <span class="dt">features =</span> motif, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="op">+</span><span class="st"> </span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true"></a><span class="st">        </span><span class="kw">scale_colour_gradientn</span>(</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true"></a>            <span class="dt">colors =</span> <span class="kw">c</span>(<span class="st">&#39;#190886&#39;</span>, <span class="st">&#39;#6F07F8&#39;</span>, <span class="st">&#39;#F954A5&#39;</span>, <span class="st">&#39;#FF9D66&#39;</span>, <span class="st">&#39;#edf118&#39;</span>),</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true"></a>            <span class="dt">limits =</span> <span class="kw">c</span>(<span class="op">-</span><span class="dv">5</span>, <span class="dv">5</span>), <span class="dt">oob =</span> scales<span class="op">::</span>squish</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true"></a>        ) <span class="op">+</span><span class="st"> </span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true"></a><span class="st">        </span><span class="kw">theme</span>(<span class="dt">aspect.ratio =</span> <span class="dv">1</span>)</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true"></a>})</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true"></a>list_p[[<span class="kw">length</span>(list_p) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>]] &lt;-<span class="st"> </span><span class="kw">DimPlot</span>(hemato, <span class="dt">group.by =</span> <span class="st">&#39;renamed_clusters&#39;</span>, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">aspect.ratio =</span> <span class="dv">1</span>)</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true"></a>p &lt;-<span class="st"> </span>cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist =</span> list_p)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="co">## - Reduce dimensionality to visualize cells in 2D</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a>hemato &lt;-<span class="st"> </span><span class="kw">RunPCA</span>(hemato) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">RunUMAP</span>(<span class="dt">reduction =</span> <span class="st">&#39;pca&#39;</span>, <span class="dt">dims =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">50</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a><span class="co">## - Find gene markers for Basophils</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a><span class="kw">DefaultAssay</span>(hemato) &lt;-<span class="st"> &quot;SCT&quot;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true"></a>p &lt;-<span class="st"> </span><span class="kw">FeaturePlot</span>(hemato, <span class="dt">features =</span> <span class="st">&#39;CD14&#39;</span>, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="co"># Or NCR1 (NKp46), CD8A, CD14, MS4A1</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true"></a><span class="kw">Idents</span>(hemato) &lt;-<span class="st"> </span>hemato<span class="op">$</span>renamed_clusters</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true"></a>basophils_genes &lt;-<span class="st"> </span>Seurat<span class="op">::</span><span class="kw">FindMarkers</span>(</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true"></a>    <span class="dt">object =</span> hemato,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true"></a>    <span class="dt">assay =</span> <span class="st">&#39;GENE&#39;</span>, </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true"></a>    <span class="dt">ident.1 =</span> <span class="st">&#39;Baso.&#39;</span>,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true"></a>    <span class="dt">ident.2 =</span> <span class="kw">unique</span>(<span class="kw">Idents</span>(hemato)[<span class="kw">Idents</span>(hemato) <span class="op">!=</span><span class="st"> &#39;Baso.&#39;</span>]),</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true"></a>    <span class="dt">min.pct =</span> <span class="fl">0.15</span>, </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true"></a>    <span class="dt">only.pos =</span> <span class="ot">TRUE</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true"></a>)</span></code></pre></div>
 </div>
 <div id="compare-gene-activity-and-tf-activity" class="section level3">
 <h3>Compare gene activity and TF activity</h3>
