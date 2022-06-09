@@ -108,6 +108,7 @@ BiocManager::install('org.Hs.eg.db', update = FALSE)
 BiocManager::install('destiny', update = FALSE)
 BiocManager::install('TENxPBMCData', update = FALSE)
 BiocManager::install('scRNAseq', update = FALSE)
+BiocManager::install('scDblFinder', update = FALSE)
 "
 
 ## --- Create scRNAseq2022 conda env. and add other dependencies

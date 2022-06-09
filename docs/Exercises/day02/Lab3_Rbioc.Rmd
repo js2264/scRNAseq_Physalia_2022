@@ -275,8 +275,8 @@ Quantitative metrics for scRNAseq studies can also be stored in `assays`:
 
 ```{r eval = FALSE}
 assays(sce)
-assays(sce, 'counts')[1:10, 1:10]
-assays(sce, 'logcounts')[1:10, 1:10]
+assay(sce, 'counts')[1:10, 1:10]
+assay(sce, 'logcounts')[1:10, 1:10]
 counts(sce)[1:10, 1:10]
 logcounts(sce)[1:10, 1:10]
 ```
@@ -309,9 +309,9 @@ head(pca$x[, 1:50])
 
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
-umap <- uwot::umap(pca)
+umap <- uwot::umap(pca$x)
 colnames(umap) <- c('UMAP1', 'UMAP2')
-plot(pca[,1], pca[,2])
+plot(pca$x[,1], pca$x[,2])
 plot(umap[,1], umap[,2])
 ```
 </p></details><br>
@@ -374,8 +374,7 @@ head(sce_seurat$label)
 Seurat::GetAssayData(object = sce_seurat, slot = "counts")[1:10, 1:10]
 Seurat::GetAssayData(object = sce_seurat, slot = "data")[1:10, 1:10]
 # Embeddings 
-head(Seurat::Embeddings(object = sce_seurat, reduction = "pca"))
-head(Seurat::Embeddings(object = sce_seurat, 'umap')[1:10,])
+head(Seurat::Embeddings(object = sce_seurat, reduction = "diffusion"))
 ```
 </p></details><br>
 
@@ -386,7 +385,7 @@ head(Seurat::Embeddings(object = sce_seurat, 'umap')[1:10,])
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
 library(SingleCellExperiment)
-sce <- DropletUtils::read10xCounts('~/Share/GSM4486714_AXH009_', type = 'prefix')
+sce <- DropletUtils::read10xCounts('~/Share/data_wrangling/counts/outs/filtered_feature_bc_matrix.h5')
 sce
 colData(sce)
 rowData(sce)

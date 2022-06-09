@@ -9,7 +9,7 @@ presentation1: "day05/Lecture8_spatial-transcriptomics.pdf"
 - **\[1h 15\]** Lecture 8 - Advances in single-cell genomics: spatial transcriptomics
 [[PDF]](/{{<myPackageUrl>}}Presentations/{{< param "presentation1" >}})
 
-## Journal club (1h)
+<!-- ## Journal club (1h)
 
 We will discuss in groups either a paper on cell cycle analysis, or this informative blog post on testing for differential expression.
 
@@ -19,7 +19,7 @@ We will discuss in groups either a paper on cell cycle analysis, or this informa
 > [Handling confounded samples for differential expression in scRNA-seq experiments](https://www.nxn.se/valent/2019/2/15/handling-confounded-samples-for-differential-expression-in-scrna-seq-experiments)
 
 Read one, or both texts, for Friday, and identify 1-2 points that you would wish to discuss with the group.
-
+ -->
 ---
 
 ## Group projects 
@@ -61,8 +61,7 @@ The data will be available at the following location:
 
 During the last hour or so, each group will give a very brief presentation of their work. 
 
-Each presentation should be +/- 4-5 slides max, and should definitely take less 
-than 10' max with some questions. 
+Each presentation should be +/- 2-3 slides max, and should definitely take ~ 5' max with some questions. 
 
 Focus on the important points: 
 
@@ -81,22 +80,3 @@ and if you had time to investigate it, the lineage(s) and anything else you thou
 Don't spend half of your time polishing your slides! There is no evaluation here, we want you to focus on 
 what you have done with the data, more than the quality of your "results" or the prettiness of your slides ;) 
 
----
-
-## Happy hour time 
-
-For those who want, once the course is over, we will be having a more informal 
-hang out time, so that everybody can chat together and have a nice time. 
-This is the end of a week-long workshop, now is time to relax!
-
-What online workshops cannot provide (sadly): 
-
-- Snacks 
-- Drinks 
-- Couches 
-
-What we can **definitely** provide: 
-
-- Informal feedbacks
-- Friendly discussions
-- Good vibes

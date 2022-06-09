@@ -2,9 +2,9 @@
 title: "4. Day 04"
 day: "Day 04"
 presentation1: "day04/Lecture6_pseudotime.pdf"
-presentation2: "day04/Lecture7_epigenome.pdf"
+presentation2: "day04/Lecture7_ATAC.pdf"
 practical1: "day04/Lab7_pseudotime"
-practical2: "day04/Lab8_scATACseq"
+practical2: "day04/Lab8_atac-seq"
 ---
 
 ---

@@ -1892,8 +1892,8 @@ Show code
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a><span class="kw">assays</span>(sce)</span></code></pre></div>
 <p>Quantitative metrics for scRNAseq studies can also be stored in <code>assays</code>:</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="kw">assays</span>(sce)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a><span class="kw">assays</span>(sce, <span class="st">&#39;counts&#39;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a><span class="kw">assays</span>(sce, <span class="st">&#39;logcounts&#39;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a><span class="kw">assay</span>(sce, <span class="st">&#39;counts&#39;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a><span class="kw">assay</span>(sce, <span class="st">&#39;logcounts&#39;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true"></a><span class="kw">counts</span>(sce)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true"></a><span class="kw">logcounts</span>(sce)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span></code></pre></div>
 <blockquote>
@@ -1936,9 +1936,9 @@ Show code
 Show code
 </summary>
 <p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a>umap &lt;-<span class="st"> </span>uwot<span class="op">::</span><span class="kw">umap</span>(pca)</span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a>umap &lt;-<span class="st"> </span>uwot<span class="op">::</span><span class="kw">umap</span>(pca<span class="op">$</span>x)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a><span class="kw">colnames</span>(umap) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;UMAP1&#39;</span>, <span class="st">&#39;UMAP2&#39;</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a><span class="kw">plot</span>(pca[,<span class="dv">1</span>], pca[,<span class="dv">2</span>])</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a><span class="kw">plot</span>(pca<span class="op">$</span>x[,<span class="dv">1</span>], pca<span class="op">$</span>x[,<span class="dv">2</span>])</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a><span class="kw">plot</span>(umap[,<span class="dv">1</span>], umap[,<span class="dv">2</span>])</span></code></pre></div>
 </p>
 </details>
@@ -1992,8 +1992,7 @@ Show code
 <span id="cb23-11"><a href="#cb23-11" aria-hidden="true"></a>Seurat<span class="op">::</span><span class="kw">GetAssayData</span>(<span class="dt">object =</span> sce_seurat, <span class="dt">slot =</span> <span class="st">&quot;counts&quot;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
 <span id="cb23-12"><a href="#cb23-12" aria-hidden="true"></a>Seurat<span class="op">::</span><span class="kw">GetAssayData</span>(<span class="dt">object =</span> sce_seurat, <span class="dt">slot =</span> <span class="st">&quot;data&quot;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span>
 <span id="cb23-13"><a href="#cb23-13" aria-hidden="true"></a><span class="co"># Embeddings </span></span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true"></a><span class="kw">head</span>(Seurat<span class="op">::</span><span class="kw">Embeddings</span>(<span class="dt">object =</span> sce_seurat, <span class="dt">reduction =</span> <span class="st">&quot;pca&quot;</span>))</span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true"></a><span class="kw">head</span>(Seurat<span class="op">::</span><span class="kw">Embeddings</span>(<span class="dt">object =</span> sce_seurat, <span class="st">&#39;umap&#39;</span>)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,])</span></code></pre></div>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true"></a><span class="kw">head</span>(Seurat<span class="op">::</span><span class="kw">Embeddings</span>(<span class="dt">object =</span> sce_seurat, <span class="dt">reduction =</span> <span class="st">&quot;diffusion&quot;</span>))</span></code></pre></div>
 </p>
 </details>
 <p><br></p>
@@ -2010,7 +2009,7 @@ Show code
 </summary>
 <p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true"></a><span class="kw">library</span>(SingleCellExperiment)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true"></a>sce &lt;-<span class="st"> </span>DropletUtils<span class="op">::</span><span class="kw">read10xCounts</span>(<span class="st">&#39;~/Share/GSM4486714_AXH009_&#39;</span>, <span class="dt">type =</span> <span class="st">&#39;prefix&#39;</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true"></a>sce &lt;-<span class="st"> </span>DropletUtils<span class="op">::</span><span class="kw">read10xCounts</span>(<span class="st">&#39;~/Share/data_wrangling/counts/outs/filtered_feature_bc_matrix.h5&#39;</span>)</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true"></a>sce</span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true"></a><span class="kw">colData</span>(sce)</span>
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true"></a><span class="kw">rowData</span>(sce)</span></code></pre></div>
@@ -2063,7 +2062,7 @@ This will be extensively covered in the next lab for everybody.</p>
 ##  collate  en_GB.UTF-8                 
 ##  ctype    en_GB.UTF-8                 
 ##  tz       Europe/Paris                
-##  date     2022-06-07                  
+##  date     2022-06-09                  
 ## 
 ## ─ Packages ───────────────────────────────────────────────────────────────────
 ##  package                * version  date       lib source        
