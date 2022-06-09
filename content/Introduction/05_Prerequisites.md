@@ -109,6 +109,8 @@ BiocManager::install('destiny', update = FALSE)
 BiocManager::install('TENxPBMCData', update = FALSE)
 BiocManager::install('scRNAseq', update = FALSE)
 BiocManager::install('scDblFinder', update = FALSE)
+BiocManager::install('chromVAR', update = FALSE)
+BiocManager::install('EnsDb.Hsapiens.v75', update = FALSE)
 "
 
 ## --- Create scRNAseq2022 conda env. and add other dependencies

@@ -176,7 +176,6 @@ predictions <- SingleR::SingleR(
     labels = colData(HPA)$cell_type, 
     clusters = testis$cluster
 )
-table(predictions$labels, testis$cluster)
 testis$annotation <- predictions$labels[testis$cluster]
 p <- cowplot::plot_grid(
     scater::plotReducedDim(testis, dimred = 'corrected', colour_by = 'cluster', text_by = 'cluster') + ggtitle('Testis data, PCA, graph-based clusters'), 
@@ -240,6 +239,13 @@ colnames(pca_curve) <- paste0('PC', 1:ncol(pca_curve))
 tsne_curve <- slingshot::embedCurves(germcells_slingshot, 'TSNE', smoother = 'loess', span = 0.1) %>% slingshot::slingCurves(as.df = TRUE)
 tsne_curve <- tsne_curve[order(tsne_curve$Order), ]
 colnames(tsne_curve) <- paste0('TSNE', 1:ncol(tsne_curve))
+```
+</p></details><br>
+
+- Plot PCA and tSNE embeddings, coloring cells by either their annotation or their pseudotime value. Overlay the principal curves to each embedding
+
+<details><summary>Show code</summary><p>
+```{r eval = FALSE}
 df <- tibble(
     PC1 = reducedDim(germcells, 'corrected')[,1], 
     PC2 = reducedDim(germcells, 'corrected')[,2], 
@@ -248,13 +254,6 @@ df <- tibble(
     annotation = germcells$annotation, 
     pseudotime = germcells$pseudotime
 )
-```
-</p></details><br>
-
-- Plot PCA and tSNE embeddings, coloring cells by either their annotation or their pseudotime value. Overlay the principal curves to each embedding
-
-<details><summary>Show code</summary><p>
-```{r eval = FALSE}
 p <- cowplot::plot_grid(
     df %>% 
         ggplot() + 
@@ -363,8 +362,8 @@ Let's see whether RNA velocity helps orientating our spermatocyte differentiatio
 <details><summary>Show code</summary><p>
 ```{r eval = FALSE}
 full_GSE112013_counts <- LoomExperiment::import('Share/Guo_testis/Guo_testis_full-counts.loom')
-germcells <- germcells[rowData(germcells)$gene_id %in% rowData(full_GSE112013_counts_germcells)$Accession, ]
-full_GSE112013_counts_germcells <- full_GSE112013_counts[match(rowData(germcells)$gene_id, rowData(full_GSE112013_counts_germcells)$Accession), match(germcells$Barcode, full_GSE112013_counts$Barcode)]
+germcells <- germcells[rowData(germcells)$gene_id %in% rowData(full_GSE112013_counts)$Accession, ]
+full_GSE112013_counts_germcells <- full_GSE112013_counts[match(rowData(germcells)$gene_id, rowData(full_GSE112013_counts)$Accession), match(germcells$Barcode, full_GSE112013_counts$Barcode)]
 dim(germcells)
 dim(full_GSE112013_counts_germcells)
 assay(germcells, 'spliced', withDimnames=FALSE) <- assay(full_GSE112013_counts_germcells, 'spliced')
