@@ -1,7 +1,7 @@
 ---
 title: "5. Day 05"
 day: "Day 05"
-presentation1: "day05/Lecture8_spatial-transcriptomics.pdf"
+presentation1: "day05/Lecture8_spatial.pdf"
 ---
 
 ## Presentations for {{< param "day" >}}
