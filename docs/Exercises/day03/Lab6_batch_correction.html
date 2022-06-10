@@ -1862,7 +1862,7 @@ font-weight: bold
 <span id="cb4-42"><a href="#cb4-42" aria-hidden="true"></a><span class="kw">adj.rand.index</span>(<span class="kw">as.numeric</span>(ari<span class="op">$</span>tech), <span class="kw">as.numeric</span>(ari<span class="op">$</span>seurat_clusters))</span>
 <span id="cb4-43"><a href="#cb4-43" aria-hidden="true"></a></span>
 <span id="cb4-44"><a href="#cb4-44" aria-hidden="true"></a><span class="co"># We can also identify conserved marker genes across the batches. Differential gene expression is</span></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true"></a><span class="co"># done across each batch, and the p-values are combined.</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true"></a><span class="co"># done across each batch, and the p-values are combined. (requires metap packge installation)</span></span>
 <span id="cb4-46"><a href="#cb4-46" aria-hidden="true"></a>markers &lt;-<span class="st"> </span><span class="kw">FindConservedMarkers</span>(gcdata, <span class="dt">ident.1 =</span> <span class="dv">0</span>, <span class="dt">grouping.var =</span> <span class="st">&quot;tech&quot;</span>, <span class="dt">assay =</span> <span class="st">&quot;RNA&quot;</span>, <span class="dt">print.bar =</span> T)</span>
 <span id="cb4-47"><a href="#cb4-47" aria-hidden="true"></a><span class="kw">head</span>(markers)</span>
 <span id="cb4-48"><a href="#cb4-48" aria-hidden="true"></a></span>
@@ -1963,7 +1963,7 @@ font-weight: bold
 <span id="cb5-77"><a href="#cb5-77" aria-hidden="true"></a><span class="co"># Use the getFactorMarkers function and choose 2 datasets.</span></span>
 <span id="cb5-78"><a href="#cb5-78" aria-hidden="true"></a><span class="co"># Then plot some genes of interest using plotGene.</span></span>
 <span id="cb5-79"><a href="#cb5-79" aria-hidden="true"></a>markers &lt;-<span class="st"> </span><span class="kw">getFactorMarkers</span>(data.liger, <span class="dt">dataset1 =</span> <span class="st">&quot;celseq2&quot;</span>, <span class="dt">dataset2 =</span> <span class="st">&quot;smartseq2&quot;</span>, <span class="dt">num.genes =</span> <span class="dv">10</span>)</span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true"></a><span class="kw">plotGene</span>(data.liger, <span class="dt">gene =</span> <span class="st">&quot;INS&quot;</span>)</span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true"></a><span class="kw">plotGene</span>(data.liger, <span class="dt">gene =</span> <span class="st">&quot;INS&quot;</span>, <span class="dt">pt.size =</span> <span class="dv">1</span>)</span>
 <span id="cb5-81"><a href="#cb5-81" aria-hidden="true"></a></span>
 <span id="cb5-82"><a href="#cb5-82" aria-hidden="true"></a><span class="co"># Save current progress.</span></span>
 <span id="cb5-83"><a href="#cb5-83" aria-hidden="true"></a><span class="kw">save</span>(data.liger, <span class="dt">file =</span> Rda.liger.path)</span>

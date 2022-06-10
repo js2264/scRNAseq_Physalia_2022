@@ -29,7 +29,8 @@ library(rliger)
 
 # Only run this once, as they are not installed in our AMI environment.
 # BiocManager::install('multtest')
-# install.packages('metap')
+# packageurl <- "https://cran.r-project.org/src/contrib/Archive/metap/metap_1.4.tar.gz"
+# install.packages(packageurl, repos=NULL, type="source")
 
 # Set folder location for saving output files. This is also the same location as input data.
 mydir <- "~/Share/batch_correction/"
@@ -237,7 +238,7 @@ ari$tech <- plyr::mapvalues(ari$tech, from = c("celseq", "celseq2", "fluidigmc1"
 adj.rand.index(as.numeric(ari$tech), as.numeric(ari$seurat_clusters))
 
 # We can also identify conserved marker genes across the batches. Differential gene expression is
-# done across each batch, and the p-values are combined.
+# done across each batch, and the p-values are combined. (requires metap packge installation)
 markers <- FindConservedMarkers(gcdata, ident.1 = 0, grouping.var = "tech", assay = "RNA", print.bar = T)
 head(markers)
 
@@ -341,7 +342,7 @@ dev.off()
 # Use the getFactorMarkers function and choose 2 datasets.
 # Then plot some genes of interest using plotGene.
 markers <- getFactorMarkers(data.liger, dataset1 = "celseq2", dataset2 = "smartseq2", num.genes = 10)
-plotGene(data.liger, gene = "INS")
+plotGene(data.liger, gene = "INS", pt.size = 1)
 
 # Save current progress.
 save(data.liger, file = Rda.liger.path)
